@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FoodGo Negocios — Registra tu restaurante</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body class="auth-page">
+
+  <main class="login-layout">
+
+    <!-- COLUMNA DE IMAGEN -->
+    <section class="login-slider" aria-label="FoodGo Negocios">
+
+      <div class="table-bg" style="background-image:url('https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1000&q=80');"></div>
+
+      <div class="slider-overlay"></div>
+
+      <div class="slider-content">
+        <div class="brand login-brand">
+          Food<span>Go</span> <span style="color:#fff; font-weight:400; font-size:16px;">Negocios</span>
+        </div>
+
+        <div>
+          <p class="slider-tag">MÁS PEDIDOS, MÁS CLIENTES</p>
+          <h2>Lleva tu restaurante a miles de personas hambrientas.</h2>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- COLUMNA DEL FORMULARIO -->
+    <section class="login-panel">
+      <div class="login-panel-content">
+
+        <!-- INICIAR SESIÓN (dueño ya registrado) -->
+        <div id="login-view">
+
+          <div class="mobile-brand brand">Food<span>Go</span> Negocios</div>
+
+          <h1>Panel de tu negocio</h1>
+          <p class="login-description">Ingresa para administrar tu restaurante en FoodGo.</p>
+
+          <div class="form-msg" id="login-msg"></div>
+
+          <form id="login-form">
+            <div class="login-field">
+              <label for="login-email">Correo electrónico</label>
+              <input type="email" id="login-email" required autocomplete="email" placeholder="correo@turestaurante.com" />
+            </div>
+
+            <div class="login-field">
+              <label for="login-password">Contraseña</label>
+              <div class="password-input-wrap">
+                <input type="password" id="login-password" required autocomplete="current-password" placeholder="Escribe tu contraseña" />
+                <button type="button" class="show-password" data-target="login-password" aria-label="Mostrar contraseña">Ver</button>
+              </div>
+            </div>
+
+            <button type="submit" class="login-submit">Iniciar sesión</button>
+          </form>
+
+          <p class="login-switch">
+            ¿Aún no registras tu negocio?
+            <a href="#" id="show-register">Regístralo aquí</a>
+          </p>
+
+          <div class="demo-hint" style="margin-top:24px;">
+            ¿Buscas pedir comida en vez de vender? <a href="index.html" style="color:var(--mango); font-weight:700;">Ve al login de clientes</a>
+          </div>
+        </div>
+
+        <!-- REGISTRO DE NEGOCIO -->
+        <div id="register-view" class="hidden-view">
+
+          <div class="mobile-brand brand">Food<span>Go</span> Negocios</div>
+
+          <h1>Registra tu restaurante</h1>
+          <p class="login-description">Empieza a recibir pedidos en minutos.</p>
+
+          <div class="form-msg" id="register-msg"></div>
+
+          <form id="register-form">
+
+            <div class="login-field">
+              <label for="reg-nombre">Tu nombre completo</label>
+              <input type="text" id="reg-nombre" required autocomplete="name" placeholder="Nombre del responsable" />
+            </div>
+
+            <div class="login-field">
+              <label for="reg-email">Correo electrónico</label>
+              <input type="email" id="reg-email" required autocomplete="email" placeholder="correo@turestaurante.com" />
+            </div>
+
+            <div class="login-field">
+              <label for="reg-password">Contraseña</label>
+              <div class="password-input-wrap">
+                <input type="password" id="reg-password" required minlength="6" autocomplete="new-password" placeholder="Mínimo 6 caracteres" />
+                <button type="button" class="show-password" data-target="reg-password" aria-label="Mostrar contraseña">Ver</button>
+              </div>
+            </div>
+
+            <div class="login-field">
+              <label for="reg-negocio">Nombre del negocio</label>
+              <input type="text" id="reg-negocio" required placeholder="Ej. Pizza Vulcano" />
+            </div>
+
+            <div class="login-field">
+              <label for="reg-ubicacion">Ubicación del negocio</label>
+              <input type="text" id="reg-ubicacion" required placeholder="Calle, número, ciudad" />
+            </div>
+
+            <div class="login-field">
+              <label for="reg-tarjeta-numero">Tarjeta para recibir tus pagos</label>
+              <input type="text" id="reg-tarjeta-numero" inputmode="numeric" maxlength="19" required placeholder="Número de tarjeta" />
+            </div>
+
+            <div class="login-field">
+              <label for="reg-tarjeta-titular">Titular de la tarjeta</label>
+              <input type="text" id="reg-tarjeta-titular" required placeholder="Nombre como aparece en la tarjeta" />
+            </div>
+
+            <p class="secure-note">🔒 Tus datos bancarios se procesan de forma segura.</p>
+
+            <button type="submit" class="login-submit">Crear cuenta de negocio</button>
+          </form>
+
+          <p class="login-switch">
+            ¿Ya tienes cuenta de negocio?
+            <a href="#" id="show-login">Inicia sesión</a>
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <script src="js/api.js"></script>
+    <script>
+    const usuarioActual = getUser();
+    if (getToken() && usuarioActual && usuarioActual.rol === "dueno") {
+      window.location.href = "dueno.html";
+    }
+
+    const loginView = document.getElementById("login-view");
+    const registerView = document.getElementById("register-view");
+
+    document.getElementById("show-register").addEventListener("click", (e) => {
+      e.preventDefault();
+      loginView.classList.add("hidden-view");
+      registerView.classList.remove("hidden-view");
+    });
+
+    document.getElementById("show-login").addEventListener("click", (e) => {
+      e.preventDefault();
+      registerView.classList.add("hidden-view");
+      loginView.classList.remove("hidden-view");
+    });
+
+    function mostrarMensaje(id, texto, tipo) {
+      const el = document.getElementById(id);
+      el.textContent = texto;
+      el.className = `form-msg ${tipo}`;
+    }
+
+    document.getElementById("login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("login-email").value.trim();
+      const password = document.getElementById("login-password").value;
+
+      try {
+        const data = await apiFetch("/auth/login", {
+          method: "POST",
+          body: JSON.stringify({ email, password }),
+        });
+
+        if (data.usuario.rol !== "dueno") {
+          mostrarMensaje("login-msg", "Esta cuenta no es de un negocio. Usa el login de clientes.", "error");
+          return;
+        }
+
+        guardarSesion(data.token, data.usuario);
+        window.location.href = "panel-negocio.html";
+      } catch (err) {
+        mostrarMensaje("login-msg", err.message, "error");
+      }
+    });
+
+    document.getElementById("register-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const nombre = document.getElementById("reg-nombre").value.trim();
+      const email = document.getElementById("reg-email").value.trim();
+      const password = document.getElementById("reg-password").value;
+      const nombreNegocio = document.getElementById("reg-negocio").value.trim();
+      const ubicacion = document.getElementById("reg-ubicacion").value.trim();
+      const numero = document.getElementById("reg-tarjeta-numero").value.trim();
+      const titular = document.getElementById("reg-tarjeta-titular").value.trim();
+
+      if (numero.replace(/\s/g, "").length < 15) {
+        mostrarMensaje("register-msg", "Ingresa un número de tarjeta válido", "error");
+        return;
+      }
+
+      try {
+        const data = await apiFetch("/auth/registro-negocio", {
+          method: "POST",
+          body: JSON.stringify({
+            nombre,
+            email,
+            password,
+            nombreNegocio,
+            ubicacion,
+            tarjeta: { numero, titular },
+          }),
+        });
+
+        guardarSesion(data.token, data.usuario);
+        window.location.href = "dueno.html";
+      } catch (err) {
+        mostrarMensaje("register-msg", err.message, "error");
+      }
+    });
+
+    document.querySelectorAll(".show-password").forEach((button) => {
+      button.addEventListener("click", () => {
+        const input = document.getElementById(button.dataset.target);
+        const ocultar = input.type === "text";
+        input.type = ocultar ? "password" : "text";
+        button.textContent = ocultar ? "Ver" : "Ocultar";
+      });
+    });
+
+    document.getElementById("reg-tarjeta-numero").addEventListener("input", (e) => {
+      let limpio = e.target.value.replace(/\D/g, "").slice(0, 16);
+      e.target.value = limpio.replace(/(.{4})/g, "$1 ").trim();
+    });
+  </script>
+
+</body>
+</html>

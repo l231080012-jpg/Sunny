@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FoodGo Negocios — Panel</title>
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container navbar-inner">
+    <a href="panel-negocio.html" class="brand">Food<span>Go</span> <span style="font-size:14px; font-weight:400; color:var(--text-muted);">Negocios</span></a>
+    <div class="nav-links">
+      <a href="#" class="tab-link active" data-tab="tab-restaurante">Mi restaurante</a>
+      <a href="#" class="tab-link" data-tab="tab-menu">Menú</a>
+      <a href="#" class="tab-link" data-tab="tab-pedidos">Pedidos</a>
+      <a href="#" class="tab-link" data-tab="tab-bodega">Bodega</a>
+      <a href="#" class="tab-link" data-tab="tab-caja">Caja</a>
+      <a href="#" class="tab-link" data-tab="tab-reportes">Reportes</a>
+    </div>
+    <div id="nav-user"></div>
+  </div>
+</nav>
+
+<div class="container" style="padding-bottom:60px;">
+
+  <!-- ===================== TAB: MI RESTAURANTE ===================== -->
+  <section id="tab-restaurante" class="panel-tab">
+    <div class="page-header">
+      <p class="eyebrow">Configura tu negocio</p>
+      <h1 id="restaurante-titulo">Mi restaurante</h1>
+      <p>Estos son los datos que verán tus clientes en FoodGo.</p>
+    </div>
+
+    <div class="form-msg" id="restaurante-msg"></div>
+
+    <form id="restaurante-form" class="panel-card" style="max-width:560px;">
+      <div class="field">
+        <label>Nombre del restaurante</label>
+        <input type="text" id="rf-nombre" required placeholder="Ej. Pizza Vulcano" />
+      </div>
+      <div class="field">
+        <label>Descripción</label>
+        <input type="text" id="rf-descripcion" placeholder="Ej. Pizzas artesanales al horno de leña" />
+      </div>
+      <div class="field">
+        <label>Categoría</label>
+        <input type="text" id="rf-categoria" placeholder="Ej. Pizza, Sushi, Hamburguesas..." />
+      </div>
+      <div class="field">
+        <label>Imagen (URL)</label>
+        <input type="text" id="rf-imagen" placeholder="https://..." />
+      </div>
+      <div class="field">
+        <label>Dirección</label>
+        <input type="text" id="rf-direccion" placeholder="Calle, número, ciudad" />
+      </div>
+      <div class="card-row">
+        <div class="field">
+          <label>Tiempo de entrega (min)</label>
+          <input type="number" id="rf-tiempo" min="5" placeholder="25" />
+        </div>
+        <div class="field">
+          <label>Costo de envío ($)</label>
+          <input type="number" id="rf-envio" step="0.01" min="0" placeholder="1.99" />
+        </div>
+      </div>
+      <button type="submit" class="btn-primary" id="restaurante-submit">Guardar restaurante</button>
+    </form>
+  </section>
+
+  <!-- ===================== TAB: MENÚ ===================== -->
+  <section id="tab-menu" class="panel-tab" style="display:none;">
+    <div class="page-header">
+      <p class="eyebrow">Tus platillos</p>
+      <h1>Menú</h1>
+      <p>Publica y edita lo que vendes. Los clientes lo verán al momento.</p>
+    </div>
+
+    <div class="form-msg" id="menu-msg"></div>
+
+    <button class="btn-primary" id="abrir-nuevo-platillo" style="max-width:220px; margin-bottom:24px;">+ Nuevo platillo</button>
+
+    <div id="menu-list" class="menu-admin-list"></div>
+  </section>
+
+  <!-- ===================== TAB: PEDIDOS ===================== -->
+  <section id="tab-pedidos" class="panel-tab" style="display:none;">
+    <div class="page-header">
+      <p class="eyebrow">En vivo</p>
+      <h1>Pedidos</h1>
+      <p>Aquí llegan los pedidos de tus clientes en tiempo real.</p>
+    </div>
+
+    <div id="pedidos-list" class="orders-list"></div>
+  </section>
+
+  <!-- ===================== TAB: BODEGA VIRTUAL ===================== -->
+  <section id="tab-bodega" class="panel-tab" style="display:none;">
+    <div class="page-header">
+      <p class="eyebrow">Inventario</p>
+      <h1>Bodega virtual</h1>
+      <p>Lleva el control de tus insumos: cuánto tienes y cuánto se ha usado.</p>
+    </div>
+
+    <div class="form-msg" id="bodega-msg"></div>
+
+    <form id="bodega-form" class="panel-card" style="max-width:520px;">
+      <h3 style="margin:0 0 16px; font-size:15px;">Agregar insumo</h3>
+      <div class="card-row">
+        <div class="field" style="flex:2;">
+          <label>Nombre del insumo</label>
+          <input type="text" id="bf-nombre" required placeholder="Ej. Carne de res" />
+        </div>
+        <div class="field">
+          <label>Cantidad inicial</label>
+          <input type="number" id="bf-cantidad" step="0.01" min="0" required placeholder="10" />
+        </div>
+        <div class="field">
+          <label>Unidad</label>
+          <select id="bf-unidad" style="width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); padding:11px 14px; border-radius:8px;">
+            <option value="kg">kg</option>
+            <option value="g">g</option>
+            <option value="l">l</option>
+            <option value="ml">ml</option>
+            <option value="unidades">unidades</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="btn-primary">Agregar a la bodega</button>
+    </form>
+
+    <div id="bodega-list" class="menu-admin-list"></div>
+  </section>
+
+  <!-- ===================== TAB: CAJA (VENTA PRESENCIAL) ===================== -->
+  <section id="tab-caja" class="panel-tab" style="display:none;">
+    <div class="page-header">
+      <p class="eyebrow">Punto de venta</p>
+      <h1>Caja</h1>
+      <p>Registra ventas de clientes que llegan directo a tu local.</p>
+    </div>
+
+    <div class="form-msg" id="caja-msg"></div>
+
+    <div class="caja-layout">
+      <div>
+        <h3 style="margin:0 0 14px; font-size:15px; color:var(--text-muted);">Toca un platillo para agregarlo</h3>
+        <div id="caja-productos" class="caja-productos"></div>
+      </div>
+
+      <div class="panel-card" style="height:fit-content;">
+        <h3 style="margin:0 0 16px; font-size:15px;">Venta actual</h3>
+        <div id="caja-carrito"></div>
+        <div class="field" style="margin-top:18px;">
+          <label>Método de pago</label>
+          <select id="caja-metodo-pago" style="width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); padding:11px 14px; border-radius:8px;">
+            <option value="Efectivo">Efectivo</option>
+            <option value="Tarjeta">Tarjeta</option>
+            <option value="Transferencia">Transferencia</option>
+          </select>
+        </div>
+        <div class="order-total" id="caja-total" style="margin:14px 0;">Total: $0.00</div>
+        <button class="btn-primary" id="caja-cobrar">Cobrar venta</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== TAB: REPORTES ===================== -->
+  <section id="tab-reportes" class="panel-tab" style="display:none;">
+    <div class="page-header">
+      <p class="eyebrow">Cierre del día</p>
+      <h1>Reportes</h1>
+      <p>Consulta lo que ingresó y gastaste, y descarga el PDF del día.</p>
+    </div>
+
+    <div class="form-msg" id="reportes-msg"></div>
+
+    <div class="filters" style="padding-top:0;">
+      <input type="date" id="reporte-fecha" style="max-width:220px;" />
+      <button class="chip active" id="reporte-ver">Ver resumen</button>
+      <button class="chip" id="reporte-descargar">⬇️ Descargar PDF</button>
+    </div>
+
+    <div id="reporte-resumen" class="panel-card" style="margin-top:20px;"></div>
+
+    <div class="panel-card" style="max-width:480px;">
+      <h3 style="margin:0 0 16px; font-size:15px;">Registrar gasto del día</h3>
+      <form id="gasto-form">
+        <div class="card-row">
+          <div class="field" style="flex:2;">
+            <label>Concepto</label>
+            <input type="text" id="gf-concepto" required placeholder="Ej. Compra de verduras" />
+          </div>
+          <div class="field">
+            <label>Monto ($)</label>
+            <input type="number" id="gf-monto" step="0.01" min="0" required placeholder="150.00" />
+          </div>
+        </div>
+        <button type="submit" class="btn-primary">Agregar gasto</button>
+      </form>
+    </div>
+  </section>
+
+</div>
+
+<!-- ===================== MODAL: EDITAR/CREAR PLATILLO ===================== -->
+<div class="overlay" id="platillo-overlay"></div>
+<div class="address-modal" id="platillo-modal" style="max-width:460px;">
+  <div class="address-modal-header">
+    <h2 id="platillo-modal-title">Nuevo platillo</h2>
+    <button id="platillo-modal-close">&times;</button>
+  </div>
+
+  <div class="form-msg" id="platillo-msg"></div>
+
+  <form id="platillo-form">
+    <input type="hidden" id="pf-id" />
+    <div class="field">
+      <label>Nombre</label>
+      <input type="text" id="pf-nombre" required placeholder="Ej. Pizza Margarita" />
+    </div>
+    <div class="field">
+      <label>Descripción</label>
+      <input type="text" id="pf-descripcion" placeholder="Ej. Tomate, mozzarella y albahaca" />
+    </div>
+    <div class="card-row">
+      <div class="field">
+        <label>Precio ($)</label>
+        <input type="number" id="pf-precio" step="0.01" min="0" required placeholder="9.99" />
+      </div>
+      <div class="field">
+        <label>Categoría</label>
+        <input type="text" id="pf-categoria" placeholder="Ej. Pizzas" />
+      </div>
+    </div>
+    <div class="field">
+      <label>Horario</label>
+      <select id="pf-tipo-comida" style="width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); padding:11px 14px; border-radius:8px;">
+        <option value="cualquiera">Cualquier horario</option>
+        <option value="desayuno">Desayuno</option>
+        <option value="almuerzo">Almuerzo</option>
+        <option value="cena">Cena</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Imagen (URL, opcional)</label>
+      <input type="text" id="pf-imagen" placeholder="https://..." />
+    </div>
+    <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-muted); margin-bottom:18px;">
+      <input type="checkbox" id="pf-disponible" checked style="width:16px; height:16px;" />
+      Disponible para la venta
+    </label>
+    <button type="submit" class="btn-primary" id="platillo-submit">Guardar platillo</button>
+  </form>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+  const ESTADOS_LABEL = { pendiente: "Nuevo", en_camino: "En camino", entregado: "Entregado", devuelto: "Devolución", cancelado: "Cancelado" };
+  let miRestaurante = null;
+
+  function exigirDueno() {
+    const usuario = getUser();
+    if (!getToken() || !usuario || usuario.rol !== "dueño") {
+      window.location.href = "negocio.html";
+      return false;
+    }
+    return true;
+  }
+
+  function renderNavUserNegocio() {
+    const el = document.getElementById("nav-user");
+    const usuario = getUser();
+    el.innerHTML = `
+      <span style="color:var(--text-muted); font-size:14px; margin-right:12px;">Hola, ${usuario.nombre.split(" ")[0]}</span>
+      <button id="logout-btn" style="background:transparent; border:1px solid var(--border-strong); color:var(--text); padding:6px 12px; border-radius:6px; font-size:13px;">Salir</button>
+    `;
+    document.getElementById("logout-btn").addEventListener("click", () => {
+      cerrarSesion();
+      window.location.href = "negocio.html";
+    });
+  }
+
+  // ---------- Navegación entre tabs ----------
+  document.querySelectorAll(".tab-link").forEach((link) => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      document.querySelectorAll(".tab-link").forEach((l) => l.classList.remove("active"));
+      link.classList.add("active");
+
+      document.querySelectorAll(".panel-tab").forEach((tab) => (tab.style.display = "none"));
+      document.getElementById(link.dataset.tab).style.display = "block";
+
+      if (link.dataset.tab === "tab-menu") cargarMenu();
+      if (link.dataset.tab === "tab-pedidos") cargarPedidos();
+      if (link.dataset.tab === "tab-bodega") cargarBodega();
+      if (link.dataset.tab === "tab-caja") cargarCaja();
+      if (link.dataset.tab === "tab-reportes") verResumenReporte();
+    });
+  });
+
+  // ---------- Cargar mi restaurante ----------
+  async function init() {
+    if (!exigirDueno()) return;
+    renderNavUserNegocio();
+
+    try {
+      const data = await apiFetch("/negocio/mi-restaurante");
+      miRestaurante = data.restaurante;
+
+      if (miRestaurante) {
+        document.getElementById("restaurante-titulo").textContent = "Editar " + miRestaurante.nombre;
+        document.getElementById("restaurante-submit").textContent = "Guardar cambios";
+        llenarFormularioRestaurante(miRestaurante);
+      } else {
+        // Primera vez: precargamos con el nombre/ubicación que dio al registrarse
+        document.getElementById("rf-nombre").value = data.negocio.nombre_negocio;
+        document.getElementById("rf-direccion").value = data.negocio.ubicacion;
+        mostrarMensajePanel("restaurante-msg", "Aún no has creado tu restaurante público. Completa estos datos y guárdalos para empezar a recibir pedidos.", "info");
+      }
+    } catch (err) {
+      mostrarMensajePanel("restaurante-msg", err.message, "error");
+    }
+  }
+
+  function llenarFormularioRestaurante(r) {
+    document.getElementById("rf-nombre").value = r.nombre;
+    document.getElementById("rf-descripcion").value = r.descripcion || "";
+    document.getElementById("rf-categoria").value = r.categoria || "";
+    document.getElementById("rf-imagen").value = r.imagen || "";
+    document.getElementById("rf-direccion").value = r.direccion || "";
+    document.getElementById("rf-tiempo").value = r.tiempoEntregaMin || 25;
+    document.getElementById("rf-envio").value = r.costoEnvio || 1.99;
+  }
+
+  function mostrarMensajePanel(id, texto, tipo) {
+    const el = document.getElementById(id);
+    el.textContent = texto;
+    el.className = `form-msg ${tipo}`;
+  }
+
+  document.getElementById("restaurante-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const payload = {
+      nombre: document.getElementById("rf-nombre").value.trim(),
+      descripcion: document.getElementById("rf-descripcion").value.trim(),
+      categoria: document.getElementById("rf-categoria").value.trim() || "Variado",
+      imagen: document.getElementById("rf-imagen").value.trim(),
+      direccion: document.getElementById("rf-direccion").value.trim(),
+      tiempoEntregaMin: Number(document.getElementById("rf-tiempo").value) || 25,
+      costoEnvio: Number(document.getElementById("rf-envio").value) || 0,
+    };
+
+    try {
+      if (miRestaurante) {
+        miRestaurante = await apiFetch("/negocio/mi-restaurante", { method: "PUT", body: JSON.stringify(payload) });
+      } else {
+        miRestaurante = await apiFetch("/negocio/mi-restaurante", { method: "POST", body: JSON.stringify(payload) });
+        document.getElementById("restaurante-submit").textContent = "Guardar cambios";
+      }
+      document.getElementById("restaurante-titulo").textContent = "Editar " + miRestaurante.nombre;
+      mostrarMensajePanel("restaurante-msg", "¡Guardado! Ya está visible para tus clientes.", "success");
+    } catch (err) {
+      mostrarMensajePanel("restaurante-msg", err.message, "error");
+    }
+  });
+
+  // ---------- MENÚ ----------
+  async function cargarMenu() {
+    const lista = document.getElementById("menu-list");
+
+    if (!miRestaurante) {
+      lista.innerHTML = `<div class="state-msg">Primero crea tu restaurante en la pestaña "Mi restaurante".</div>`;
+      return;
+    }
+
+    try {
+      const data = await apiFetch("/negocio/mi-restaurante");
+      miRestaurante = data.restaurante;
+
+      if (miRestaurante.menu.length === 0) {
+        lista.innerHTML = `<div class="state-msg">Aún no has publicado ningún platillo. Dale clic a "+ Nuevo platillo".</div>`;
+        return;
+      }
+
+      lista.innerHTML = miRestaurante.menu
+        .map(
+          (item) => `
+        <div class="menu-admin-item">
+          <div class="info">
+            <h4>${item.nombre} ${item.disponible ? "" : '<span class="badge-off">No disponible</span>'}</h4>
+            <p>${item.descripcion || ""}</p>
+            <span class="price">$${Number(item.precio).toFixed(2)} · ${item.categoria}</span>
+          </div>
+          <div class="actions">
+            <button class="icon-btn" data-edit="${item.id}">✏️</button>
+            <button class="icon-btn" data-delete="${item.id}">🗑️</button>
+          </div>
+        </div>
+      `
+        )
+        .join("");
+
+      lista.querySelectorAll("[data-edit]").forEach((btn) => {
+        btn.addEventListener("click", () => abrirModalPlatillo(miRestaurante.menu.find((i) => i.id === Number(btn.dataset.edit))));
+      });
+      lista.querySelectorAll("[data-delete]").forEach((btn) => {
+        btn.addEventListener("click", () => eliminarPlatillo(btn.dataset.delete));
+      });
+    } catch (err) {
+      lista.innerHTML = `<div class="state-msg">${err.message}</div>`;
+    }
+  }
+
+  function abrirModalPlatillo(item) {
+    document.getElementById("platillo-msg").textContent = "";
+    document.getElementById("platillo-msg").className = "form-msg";
+
+    if (item) {
+      document.getElementById("platillo-modal-title").textContent = "Editar platillo";
+      document.getElementById("pf-id").value = item.id;
+      document.getElementById("pf-nombre").value = item.nombre;
+      document.getElementById("pf-descripcion").value = item.descripcion || "";
+      document.getElementById("pf-precio").value = item.precio;
+      document.getElementById("pf-categoria").value = item.categoria || "";
+      document.getElementById("pf-tipo-comida").value = item.tipoComida || "cualquiera";
+      document.getElementById("pf-imagen").value = item.imagen || "";
+      document.getElementById("pf-disponible").checked = !!item.disponible;
+    } else {
+      document.getElementById("platillo-modal-title").textContent = "Nuevo platillo";
+      document.getElementById("platillo-form").reset();
+      document.getElementById("pf-id").value = "";
+      document.getElementById("pf-disponible").checked = true;
+    }
+
+    document.getElementById("platillo-modal").classList.add("open");
+    document.getElementById("platillo-overlay").classList.add("open");
+  }
+
+  function cerrarModalPlatillo() {
+    document.getElementById("platillo-modal").classList.remove("open");
+    document.getElementById("platillo-overlay").classList.remove("open");
+  }
+
+  document.getElementById("abrir-nuevo-platillo").addEventListener("click", () => abrirModalPlatillo(null));
+  document.getElementById("platillo-modal-close").addEventListener("click", cerrarModalPlatillo);
+  document.getElementById("platillo-overlay").addEventListener("click", cerrarModalPlatillo);
+
+  document.getElementById("platillo-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const id = document.getElementById("pf-id").value;
+    const payload = {
+      nombre: document.getElementById("pf-nombre").value.trim(),
+      descripcion: document.getElementById("pf-descripcion").value.trim(),
+      precio: Number(document.getElementById("pf-precio").value),
+      categoria: document.getElementById("pf-categoria").value.trim() || "General",
+      tipoComida: document.getElementById("pf-tipo-comida").value,
+      imagen: document.getElementById("pf-imagen").value.trim(),
+      disponible: document.getElementById("pf-disponible").checked ? 1 : 0,
+    };
+
+    try {
+      if (id) {
+        await apiFetch(`/negocio/menu/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+      } else {
+        await apiFetch("/negocio/menu", { method: "POST", body: JSON.stringify(payload) });
+      }
+      cerrarModalPlatillo();
+      mostrarToast("Platillo guardado");
+      cargarMenu();
+    } catch (err) {
+      document.getElementById("platillo-msg").textContent = err.message;
+      document.getElementById("platillo-msg").className = "form-msg error";
+    }
+  });
+
+  async function eliminarPlatillo(id) {
+    if (!confirm("¿Seguro que quieres eliminar este platillo?")) return;
+    try {
+      await apiFetch(`/negocio/menu/${id}`, { method: "DELETE" });
+      mostrarToast("Platillo eliminado");
+      cargarMenu();
+    } catch (err) {
+      mostrarToast(err.message);
+    }
+  }
+
+  // ---------- PEDIDOS ----------
+  async function cargarPedidos() {
+    const lista = document.getElementById("pedidos-list");
+    lista.innerHTML = `<div class="state-msg">Cargando pedidos...</div>`;
+
+    try {
+      const pedidos = await apiFetch("/negocio/pedidos");
+
+      if (pedidos.length === 0) {
+        lista.innerHTML = `<div class="state-msg">Todavía no te ha llegado ningún pedido.</div>`;
+        return;
+      }
+
+      lista.innerHTML = pedidos
+        .map((p) => {
+          const fecha = new Date(p.createdAt).toLocaleString("es-ES", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+          const puedeCancelar = p.estado === "pendiente" || p.estado === "en_camino";
+          return `
+          <div class="order-ticket">
+            <div class="order-ticket-top">
+              <div>
+                <h3>Pedido ${p.codigo}</h3>
+                <div class="date">${fecha} · ${p.tipoEntrega === "para_llevar" ? "Para llevar" : "A domicilio"}</div>
+              </div>
+              <span class="status-pill status-${p.estado}">${ESTADOS_LABEL[p.estado]}</span>
+            </div>
+            <div class="order-items">${p.items.map((i) => `${i.cantidad}x ${i.nombre}`).join("<br>")}</div>
+            <div class="order-total">Total: $${Number(p.total).toFixed(2)}</div>
+            <div style="display:flex; gap:8px; margin-top:10px;">
+              <button class="icon-btn" style="width:auto; padding:8px 14px; font-size:12px;" data-recibo="${p.id}" data-codigo="${p.codigo}">⬇️ Recibo PDF</button>
+              ${puedeCancelar ? `<button class="icon-btn" style="color:var(--chili); border:1px solid var(--chili-dark); padding:8px 14px; font-size:12px;" data-cancelar="${p.id}">Cancelar pedido</button>` : ""}
+            </div>
+          </div>
+        `;
+        })
+        .join("");
+
+      lista.querySelectorAll("[data-recibo]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          descargarPDF(`/negocio/pedidos/${btn.dataset.recibo}/recibo`, `recibo-${btn.dataset.codigo}.pdf`);
+        });
+      });
+
+      lista.querySelectorAll("[data-cancelar]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          if (!confirm("¿Cancelar este pedido?")) return;
+          try {
+            await apiFetch(`/negocio/pedidos/${btn.dataset.cancelar}/cancelar`, { method: "PATCH" });
+            mostrarToast("Pedido cancelado");
+            cargarPedidos();
+          } catch (err) {
+            mostrarToast(err.message);
+          }
+        });
+      });
+    } catch (err) {
+      lista.innerHTML = `<div class="state-msg">${err.message}</div>`;
+    }
+  }
+
+  // ---------- Descargar archivos protegidos (PDF) usando el token ----------
+  async function descargarPDF(path, nombreArchivo) {
+    try {
+      const resp = await fetch(`${API_BASE}${path}`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      if (!resp.ok) {
+        const data = await resp.json().catch(() => ({}));
+        throw new Error(data.mensaje || "No se pudo generar el PDF");
+      }
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = nombreArchivo;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      mostrarToast(err.message);
+    }
+  }
+
+  // ---------- BODEGA VIRTUAL ----------
+  async function cargarBodega() {
+    const lista = document.getElementById("bodega-list");
+    lista.innerHTML = `<div class="state-msg">Cargando bodega...</div>`;
+
+    try {
+      const insumos = await apiFetch("/negocio/bodega");
+
+      if (insumos.length === 0) {
+        lista.innerHTML = `<div class="state-msg">Aún no has agregado insumos a tu bodega.</div>`;
+        return;
+      }
+
+      lista.innerHTML = insumos
+        .map(
+          (i) => `
+        <div class="menu-admin-item">
+          <div class="info">
+            <h4>${i.nombre_insumo}</h4>
+            <span class="price">${Number(i.cantidad).toFixed(2)} ${i.unidad} disponibles</span>
+          </div>
+          <div class="actions">
+            <button class="icon-btn" style="width:auto; padding:0 12px;" data-mov="${i.id}" data-tipo="entrada">+ Entrada</button>
+            <button class="icon-btn" style="width:auto; padding:0 12px;" data-mov="${i.id}" data-tipo="salida">- Salida</button>
+            <button class="icon-btn" data-del-bodega="${i.id}">🗑️</button>
+          </div>
+        </div>
+      `
+        )
+        .join("");
+
+      lista.querySelectorAll("[data-mov]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const cantidad = prompt(`¿Cuánto quieres registrar como ${btn.dataset.tipo}?`);
+          if (!cantidad || isNaN(cantidad) || Number(cantidad) <= 0) return;
+          const motivo = prompt("Motivo (opcional):") || "";
+
+          try {
+            await apiFetch(`/negocio/bodega/${btn.dataset.mov}/movimiento`, {
+              method: "POST",
+              body: JSON.stringify({ tipo: btn.dataset.tipo, cantidad: Number(cantidad), motivo }),
+            });
+            mostrarToast("Movimiento registrado");
+            cargarBodega();
+          } catch (err) {
+            mostrarToast(err.message);
+          }
+        });
+      });
+
+      lista.querySelectorAll("[data-del-bodega]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          if (!confirm("¿Eliminar este insumo de tu bodega?")) return;
+          try {
+            await apiFetch(`/negocio/bodega/${btn.dataset.delBodega}`, { method: "DELETE" });
+            mostrarToast("Insumo eliminado");
+            cargarBodega();
+          } catch (err) {
+            mostrarToast(err.message);
+          }
+        });
+      });
+    } catch (err) {
+      lista.innerHTML = `<div class="state-msg">${err.message}</div>`;
+    }
+  }
+
+  document.getElementById("bodega-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const nombreInsumo = document.getElementById("bf-nombre").value.trim();
+    const cantidad = Number(document.getElementById("bf-cantidad").value);
+    const unidad = document.getElementById("bf-unidad").value;
+
+    try {
+      await apiFetch("/negocio/bodega", { method: "POST", body: JSON.stringify({ nombreInsumo, cantidad, unidad }) });
+      document.getElementById("bodega-form").reset();
+      mostrarMensajePanel("bodega-msg", "Insumo agregado a tu bodega", "success");
+      cargarBodega();
+    } catch (err) {
+      mostrarMensajePanel("bodega-msg", err.message, "error");
+    }
+  });
+
+  // ---------- CAJA (venta presencial) ----------
+  let ventaActual = []; // [{ id, nombre, precio, cantidad }]
+
+  async function cargarCaja() {
+    const contenedor = document.getElementById("caja-productos");
+
+    if (!miRestaurante || miRestaurante.menu.length === 0) {
+      contenedor.innerHTML = `<div class="state-msg">Publica platillos en la pestaña "Menú" para poder venderlos aquí.</div>`;
+      return;
+    }
+
+    contenedor.innerHTML = miRestaurante.menu
+      .filter((item) => item.disponible)
+      .map(
+        (item) => `
+      <button class="caja-producto" data-id="${item.id}" data-nombre="${item.nombre}" data-precio="${item.precio}">
+        <strong>${item.nombre}</strong>
+        <span>$${Number(item.precio).toFixed(2)}</span>
+      </button>
+    `
+      )
+      .join("");
+
+    contenedor.querySelectorAll(".caja-producto").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        agregarACaja({ id: Number(btn.dataset.id), nombre: btn.dataset.nombre, precio: Number(btn.dataset.precio) });
+      });
+    });
+
+    renderCaja();
+  }
+
+  function agregarACaja(item) {
+    const existente = ventaActual.find((i) => i.id === item.id);
+    if (existente) {
+      existente.cantidad += 1;
+    } else {
+      ventaActual.push({ ...item, cantidad: 1 });
+    }
+    renderCaja();
+  }
+
+  function cambiarCantidadCaja(id, delta) {
+    const item = ventaActual.find((i) => i.id === id);
+    if (!item) return;
+    item.cantidad += delta;
+    if (item.cantidad <= 0) ventaActual = ventaActual.filter((i) => i.id !== id);
+    renderCaja();
+  }
+
+  function renderCaja() {
+    const contenedor = document.getElementById("caja-carrito");
+
+    if (ventaActual.length === 0) {
+      contenedor.innerHTML = `<div class="state-msg" style="padding:20px 0;">Toca un platillo para agregarlo a la venta.</div>`;
+    } else {
+      contenedor.innerHTML = ventaActual
+        .map(
+          (i) => `
+        <div class="cart-line" style="font-family:inherit; color:var(--text); border-bottom:1px dashed var(--border);">
+          <div>
+            <div>${i.nombre}</div>
+            <div class="qty-controls">
+              <button onclick="cambiarCantidadCaja(${i.id}, -1)">-</button>
+              <span>${i.cantidad}</span>
+              <button onclick="cambiarCantidadCaja(${i.id}, 1)">+</button>
+            </div>
+          </div>
+          <div>$${(i.precio * i.cantidad).toFixed(2)}</div>
+        </div>
+      `
+        )
+        .join("");
+    }
+
+    const total = ventaActual.reduce((acc, i) => acc + i.precio * i.cantidad, 0);
+    document.getElementById("caja-total").textContent = `Total: $${total.toFixed(2)}`;
+  }
+
+  document.getElementById("caja-cobrar").addEventListener("click", async () => {
+    if (ventaActual.length === 0) {
+      mostrarMensajePanel("caja-msg", "Agrega al menos un platillo a la venta", "error");
+      return;
+    }
+
+    try {
+      await apiFetch("/negocio/caja/venta", {
+        method: "POST",
+        body: JSON.stringify({
+          items: ventaActual.map((i) => ({ nombre: i.nombre, precio: i.precio, cantidad: i.cantidad })),
+          metodoPago: document.getElementById("caja-metodo-pago").value,
+        }),
+      });
+
+      mostrarMensajePanel("caja-msg", "¡Venta registrada con éxito!", "success");
+      ventaActual = [];
+      renderCaja();
+    } catch (err) {
+      mostrarMensajePanel("caja-msg", err.message, "error");
+    }
+  });
+
+  // ---------- REPORTES ----------
+  document.getElementById("reporte-fecha").valueAsDate = new Date();
+
+  async function verResumenReporte() {
+    const fecha = document.getElementById("reporte-fecha").value;
+    const resumen = document.getElementById("reporte-resumen");
+    resumen.innerHTML = `<div class="state-msg">Cargando...</div>`;
+
+    try {
+      const [pedidos, gastos] = await Promise.all([
+        apiFetch(`/negocio/pedidos?fecha=${fecha}`),
+        apiFetch(`/negocio/gastos?fecha=${fecha}`),
+      ]);
+
+      const pedidosValidos = pedidos.filter((p) => p.estado !== "cancelado" && p.estado !== "devuelto");
+      const ingresos = pedidosValidos.reduce((acc, p) => acc + Number(p.total), 0);
+      const totalGastos = gastos.reduce((acc, g) => acc + Number(g.monto), 0);
+
+      resumen.innerHTML = `
+        <h3 style="margin:0 0 16px; font-size:15px;">Resumen del ${fecha}</h3>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:16px;">
+          <div><div style="font-size:12px; color:var(--text-muted);">Pedidos</div><div style="font-size:22px; font-weight:700;">${pedidosValidos.length}</div></div>
+          <div><div style="font-size:12px; color:var(--text-muted);">Ingresos</div><div style="font-size:22px; font-weight:700; color:var(--sage);">$${ingresos.toFixed(2)}</div></div>
+          <div><div style="font-size:12px; color:var(--text-muted);">Gastos</div><div style="font-size:22px; font-weight:700; color:var(--chili);">$${totalGastos.toFixed(2)}</div></div>
+          <div><div style="font-size:12px; color:var(--text-muted);">Ganancia neta</div><div style="font-size:22px; font-weight:700; color:var(--mango);">$${(ingresos - totalGastos).toFixed(2)}</div></div>
+        </div>
+      `;
+    } catch (err) {
+      resumen.innerHTML = `<div class="state-msg">${err.message}</div>`;
+    }
+  }
+
+  document.getElementById("reporte-ver").addEventListener("click", verResumenReporte);
+
+  document.getElementById("reporte-descargar").addEventListener("click", () => {
+    const fecha = document.getElementById("reporte-fecha").value;
+    descargarPDF(`/negocio/reporte-diario?fecha=${fecha}`, `reporte-${fecha}.pdf`);
+  });
+
+  document.getElementById("gasto-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const concepto = document.getElementById("gf-concepto").value.trim();
+    const monto = Number(document.getElementById("gf-monto").value);
+
+    try {
+      await apiFetch("/negocio/gastos", { method: "POST", body: JSON.stringify({ concepto, monto }) });
+      document.getElementById("gasto-form").reset();
+      mostrarToast("Gasto registrado");
+      verResumenReporte();
+    } catch (err) {
+      mostrarToast(err.message);
+    }
+  });
+
+  init();
+</script>
+</body>
+</html>

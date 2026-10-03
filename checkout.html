@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FoodGo — Pagar pedido</title>
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container navbar-inner">
+    <a href="restaurantes.html" class="brand">Food<span>Go</span></a>
+    <div class="nav-links">
+      <a href="restaurantes.html">Restaurantes</a>
+      <a href="pedidos.html">Mis pedidos</a>
+    </div>
+    <div id="nav-user"></div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="auth-wrap" style="max-width:480px;">
+    <h1>Confirma y paga tu pedido</h1>
+    <p class="sub" id="checkout-sub">Revisa tu orden antes de enviarla.</p>
+
+    <div class="form-msg" id="checkout-msg"></div>
+
+    <div id="checkout-summary" style="font-family: var(--font-mono); font-size:14px; margin-bottom:22px;"></div>
+
+    <div class="field">
+      <label for="direccion">Dirección de entrega</label>
+      <input type="text" id="direccion" required placeholder="Calle, número, ciudad" />
+    </div>
+
+    <div class="card-visual">
+      <div class="card-top">
+        <span class="card-brand" id="card-brand-label">Tarjeta</span>
+        <span>💳</span>
+      </div>
+      <div class="card-number" id="card-preview-number">•••• •••• •••• ••••</div>
+      <div class="card-bottom">
+        <div>Titular<span class="value" id="card-preview-name">NOMBRE APELLIDO</span></div>
+        <div>Vence<span class="value" id="card-preview-exp">MM/AA</span></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="numero-tarjeta">Número de tarjeta</label>
+      <input type="text" id="numero-tarjeta" inputmode="numeric" maxlength="19" placeholder="4242 4242 4242 4242" required />
+    </div>
+    <div class="field">
+      <label for="titular-tarjeta">Nombre del titular</label>
+      <input type="text" id="titular-tarjeta" placeholder="Como aparece en la tarjeta" required />
+    </div>
+    <div class="card-row">
+      <div class="field">
+        <label for="exp-tarjeta">Vencimiento</label>
+        <input type="text" id="exp-tarjeta" maxlength="5" placeholder="MM/AA" required />
+      </div>
+      <div class="field">
+        <label for="cvv-tarjeta">CVV</label>
+        <input type="password" id="cvv-tarjeta" maxlength="4" inputmode="numeric" placeholder="123" required />
+      </div>
+    </div>
+
+    <p class="secure-note">🔒 Tus datos se procesan de forma segura. Esta demo simula el cobro; está lista para conectarse a Stripe.</p>
+
+    <button class="btn-primary" id="confirmar-btn">Pagar y realizar pedido</button>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/cart.js"></script>
+
+<script src="js/direccion.js"></script>
+<script>
+  if (!exigirSesion()) throw new Error("Sin sesión");
+  renderNavUser();
+
+  const carrito = obtenerCarrito();
+  const usuario = getUser();
+
+  if (!carrito || carrito.items.length === 0) {
+    window.location.href = "restaurantes.html";
+  }
+
+  document.getElementById("direccion").value = obtenerDireccionActual()?.direccion || usuario?.direccion || "";
+  document.getElementById("checkout-sub").textContent = `Pedido de ${carrito.restauranteNombre}`;
+
+  const subtotal = carrito.items.reduce((acc, i) => acc + i.precio * i.cantidad, 0);
+  const total = subtotal + carrito.costoEnvio;
+
+  document.getElementById("checkout-summary").innerHTML = `
+    ${carrito.items.map((i) => `<div style="display:flex; justify-content:space-between; padding:4px 0;"><span>${i.cantidad}x ${i.nombre}</span><span>$${(i.precio * i.cantidad).toFixed(2)}</span></div>`).join("")}
+    <div style="display:flex; justify-content:space-between; padding:8px 0; border-top:1px dashed var(--border); margin-top:8px;"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
+    <div style="display:flex; justify-content:space-between; padding:4px 0;"><span>Envío</span><span>$${carrito.costoEnvio.toFixed(2)}</span></div>
+    <div style="display:flex; justify-content:space-between; padding:8px 0; font-weight:700; color:var(--mango);"><span>Total</span><span>$${total.toFixed(2)}</span></div>
+  `;
+
+  // ---------- Formato en vivo de la tarjeta (solo visual) ----------
+  const numeroInput = document.getElementById("numero-tarjeta");
+  const expInput = document.getElementById("exp-tarjeta");
+  const titularInput = document.getElementById("titular-tarjeta");
+
+  function detectarMarca(numero) {
+    if (/^4/.test(numero)) return "Visa";
+    if (/^5[1-5]/.test(numero)) return "Mastercard";
+    if (/^3[47]/.test(numero)) return "American Express";
+    return "Tarjeta";
+  }
+
+  numeroInput.addEventListener("input", () => {
+    let limpio = numeroInput.value.replace(/\D/g, "").slice(0, 16);
+    numeroInput.value = limpio.replace(/(.{4})/g, "$1 ").trim();
+    document.getElementById("card-brand-label").textContent = detectarMarca(limpio);
+    const oculto = limpio.padEnd(16, "•").replace(/(.{4})/g, "$1 ").trim();
+    document.getElementById("card-preview-number").textContent = limpio
+      ? limpio.replace(/\d(?=\d{4})/g, "•").replace(/(.{4})/g, "$1 ").trim()
+      : "•••• •••• •••• ••••";
+  });
+
+  expInput.addEventListener("input", () => {
+    let limpio = expInput.value.replace(/\D/g, "").slice(0, 4);
+    if (limpio.length >= 3) limpio = limpio.slice(0, 2) + "/" + limpio.slice(2);
+    expInput.value = limpio;
+    document.getElementById("card-preview-exp").textContent = limpio || "MM/AA";
+  });
+
+  titularInput.addEventListener("input", () => {
+    document.getElementById("card-preview-name").textContent = titularInput.value.toUpperCase() || "NOMBRE APELLIDO";
+  });
+
+  document.getElementById("confirmar-btn").addEventListener("click", async () => {
+    const direccion = document.getElementById("direccion").value.trim();
+    const numero = numeroInput.value.replace(/\s/g, "");
+    const titular = titularInput.value.trim();
+    const exp = expInput.value.trim();
+    const cvv = document.getElementById("cvv-tarjeta").value.trim();
+    const msgEl = document.getElementById("checkout-msg");
+
+    if (!direccion || numero.length < 15 || !titular || exp.length !== 5 || cvv.length < 3) {
+      msgEl.textContent = "Completa correctamente la dirección y los datos de la tarjeta";
+      msgEl.className = "form-msg error";
+      return;
+    }
+
+    const btn = document.getElementById("confirmar-btn");
+    btn.disabled = true;
+    btn.textContent = "Procesando pago...";
+
+    try {
+      // NOTA: en producción aquí se llamaría a Stripe.js (stripe.createPaymentMethod)
+      // y solo se enviaría al backend el paymentMethodId, nunca el número completo/CVV.
+      const pedido = await apiFetch("/pedidos", {
+        method: "POST",
+        body: JSON.stringify({
+          restauranteId: carrito.restauranteId,
+          items: carrito.items.map((i) => ({ nombre: i.nombre, precio: i.precio, cantidad: i.cantidad })),
+          direccionEntrega: direccion,
+          tipoEntrega: obtenerTipoEntrega(), 
+          tarjeta: { numero, titular },
+        }),
+      });
+
+      vaciarCarrito();
+      window.location.href = `seguimiento.html?id=${pedido._id}`;
+    } catch (err) {
+      msgEl.textContent = err.message;
+      msgEl.className = "form-msg error";
+      btn.disabled = false;
+      btn.textContent = "Pagar y realizar pedido";
+    }
+  });
+</script>
+</body>
+</html>

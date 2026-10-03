@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FoodGo — Mis pedidos</title>
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container navbar-inner">
+    <a href="restaurantes.html" class="brand">Food<span>Go</span></a>
+    <div class="nav-links">
+      <a href="restaurantes.html">Restaurantes</a>
+      <a href="pedidos.html" class="active">Mis pedidos</a>
+    </div>
+    <div style="display:flex; align-items:center; gap:16px;">
+      <div id="nav-user"></div>
+      <button class="nav-cart" onclick="abrirCartDrawer()">
+        🛒 <span id="cart-count">0</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <p class="eyebrow">Historial</p>
+    <h1>Mis pedidos</h1>
+    <p>Sigue el estado de tus pedidos actuales y revisa los anteriores.</p>
+  </div>
+
+  <div id="orders-list" class="orders-list">
+    <div class="state-msg">Cargando pedidos...</div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/cart.js"></script>
+
+<script src="js/direccion.js"></script>
+<script>
+  const ESTADOS_LABEL = {
+    pendiente: "En espera",
+    en_camino: "En camino",
+    entregado: "Entregado",
+    devuelto: "Devolución",
+    cancelado: "Cancelado",
+  };
+
+  async function init() {
+    if (!exigirSesion()) return;
+    renderNavUser();
+    inyectarCartDrawer();
+     inyectarBarraDireccion();
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("nuevo")) {
+      mostrarToast("¡Pedido realizado con éxito!");
+    }
+
+    try {
+      const pedidos = await apiFetch("/pedidos/mios");
+      render(pedidos);
+    } catch (err) {
+      document.getElementById("orders-list").innerHTML = `
+        <div class="state-msg"><div class="big">No se pudieron cargar tus pedidos</div>${err.message}</div>`;
+    }
+  }
+
+  function render(pedidos) {
+    const el = document.getElementById("orders-list");
+
+    if (pedidos.length === 0) {
+      el.innerHTML = `<div class="state-msg"><div class="big">Aún no tienes pedidos</div>Explora los restaurantes y haz tu primer pedido.</div>`;
+      return;
+    }
+
+    el.innerHTML = pedidos
+      .map((p) => {
+        const fecha = new Date(p.createdAt).toLocaleString("es-ES", {
+          day: "2-digit",
+          month: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        const enCurso = p.estado === "pendiente" || p.estado === "en_camino";
+        return `
+        <div class="order-ticket">
+          <div class="order-ticket-top">
+            <div>
+              <h3>${p.restaurante?.nombre || "Restaurante"}</h3>
+              <div class="date">${fecha} · ${p.codigo || ""}</div>
+            </div>
+            <span class="status-pill status-${p.estado}">${ESTADOS_LABEL[p.estado]}</span>
+          </div>
+          <div class="order-items">
+            ${p.items.map((i) => `${i.cantidad}x ${i.nombre}`).join("<br>")}
+          </div>
+          <div class="order-total">Total: $${p.total.toFixed(2)}</div>
+          ${enCurso ? `<a href="seguimiento.html?id=${p._id}" class="btn-primary" style="display:block; text-align:center; text-decoration:none; margin-top:14px;">Ver seguimiento en vivo</a>` : ""}
+        </div>
+      `;
+      })
+      .join("");
+  }
+
+  init();
+</script>
+</body>
+</html>

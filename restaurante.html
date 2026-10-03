@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FoodGo — Menú</title>
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container navbar-inner">
+    <a href="restaurantes.html" class="brand">Food<span>Go</span></a>
+    <div class="nav-links">
+      <a href="restaurantes.html">Restaurantes</a>
+      <a href="pedidos.html">Mis pedidos</a>
+    </div>
+    <div style="display:flex; align-items:center; gap:16px;">
+      <div id="nav-user"></div>
+      <button class="nav-cart" onclick="abrirCartDrawer()">
+        🛒 <span id="cart-count">0</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div id="restaurant-content">
+    <div class="state-msg">Cargando menú...</div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/cart.js"></script>
+
+<script src="js/direccion.js"></script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const restauranteId = params.get("id");
+
+  async function init() {
+    if (!exigirSesion()) return;
+    renderNavUser();
+    inyectarCartDrawer();
+     inyectarBarraDireccion();
+
+    if (!restauranteId) {
+      window.location.href = "restaurantes.html";
+      return;
+    }
+
+    try {
+      const restaurante = await apiFetch(`/restaurantes/${restauranteId}`);
+      render(restaurante);
+    } catch (err) {
+      document.getElementById("restaurant-content").innerHTML = `
+        <div class="state-msg"><div class="big">No se encontró el restaurante</div>${err.message}</div>`;
+    }
+  }
+
+  function render(r) {
+    const categorias = [...new Set(r.menu.map((i) => i.categoria))];
+
+    document.getElementById("restaurant-content").innerHTML = `
+      <div class="restaurant-hero" style="background-image:url('${r.imagen}')">
+        <div class="hero-info">
+          <h1>${r.nombre}</h1>
+          <p>${r.descripcion} · ★ ${r.calificacion.toFixed(1)} · ${r.tiempoEntregaMin} min · Envío $${r.costoEnvio.toFixed(2)}</p>
+        </div>
+      </div>
+
+      <div class="meal-filter" id="meal-filter-menu">
+        <button class="meal-chip active" data-meal="cualquiera">🍽️ Todo</button>
+        <button class="meal-chip" data-meal="desayuno">🥞 Desayuno</button>
+        <button class="meal-chip" data-meal="almuerzo">🥗 Almuerzo</button>
+        <button class="meal-chip" data-meal="cena">🍕 Cena</button>
+      </div>
+
+      <div class="menu-categories" id="menu-categories"></div>
+      <div id="menu-list"></div>
+    `;
+
+    document.getElementById("menu-categories").innerHTML = categorias
+      .map((c, idx) => `<button class="chip ${idx === 0 ? "active" : ""}" data-cat="${c}">${c}</button>`)
+      .join("");
+
+    let horarioActivo = "cualquiera";
+
+    function renderMenu(categoria) {
+      const items = r.menu.filter((i) => {
+        const coincideCat = i.categoria === categoria && i.disponible;
+        const coincideHorario = horarioActivo === "cualquiera" || i.tipoComida === horarioActivo || i.tipoComida === "cualquiera";
+        return coincideCat && coincideHorario;
+      });
+
+      if (items.length === 0) {
+        document.getElementById("menu-list").innerHTML = `<div class="state-msg">No hay platillos de este horario en esta categoría.</div>`;
+        return;
+      }
+
+      document.getElementById("menu-list").innerHTML = items
+        .map(
+          (item) => `
+        <div class="menu-item">
+          <div class="details">
+            <h4>${item.nombre}</h4>
+            <p>${item.descripcion || ""}</p>
+            <div class="price">$${item.precio.toFixed(2)}</div>
+          </div>
+          <button class="add-btn" data-item='${JSON.stringify(item)}'>Agregar</button>
+        </div>
+      `
+        )
+        .join("");
+
+      document.querySelectorAll(".add-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const item = JSON.parse(btn.dataset.item);
+          agregarAlCarrito(r, item);
+        });
+      });
+    }
+
+    renderMenu(categorias[0]);
+
+    document.querySelectorAll("#menu-categories .chip").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("#menu-categories .chip").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        renderMenu(btn.dataset.cat);
+      });
+    });
+
+    document.querySelectorAll("#meal-filter-menu .meal-chip").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("#meal-filter-menu .meal-chip").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        horarioActivo = btn.dataset.meal;
+        const catActiva = document.querySelector("#menu-categories .chip.active")?.dataset.cat || categorias[0];
+        renderMenu(catActiva);
+      });
+    });
+  }
+
+  init();
+</script>
+</body>
+</html>

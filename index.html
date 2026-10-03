@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>FoodGo — Iniciar sesión</title>
+
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body class="auth-page">
+
+  <main class="login-layout">
+
+    <!-- COLUMNA DE IMÁGENES -->
+    <section class="login-slider" aria-label="Galería FoodGo">
+
+      <img
+        id="slider-image"
+        class="slider-image"
+        src="img/login-1.jpg"
+        alt="Comida y estilo de vida"
+      />
+
+      <div class="slider-overlay"></div>
+
+      <div class="slider-content">
+        <div class="brand login-brand">
+          Food<span>Go</span>
+        </div>
+
+        <div>
+          <p class="slider-tag">COMIDA HASTA TU PUERTA</p>
+
+          <h2>
+            Disfruta tus platillos favoritos sin salir de casa.
+          </h2>
+        </div>
+      </div>
+
+      <div class="slider-dots" id="slider-dots"></div>
+
+    </section>
+
+    <!-- COLUMNA DEL FORMULARIO -->
+    <section class="login-panel">
+
+      <div class="login-panel-content">
+
+        <!-- INICIAR SESIÓN -->
+        <div id="login-view">
+
+          <div class="mobile-brand brand">
+            Food<span>Go</span>
+          </div>
+
+          <h1>Bienvenido de nuevo</h1>
+
+          <p class="login-description">
+            Ingresa tus datos para acceder a tu cuenta.
+          </p>
+
+          <div
+            class="form-msg"
+            id="login-msg"
+          ></div>
+
+          <div class="social-buttons">
+
+            <button
+              type="button"
+              class="social-button"
+              id="google-login"
+            >
+              <span class="social-icon">G</span>
+              Google
+            </button>
+
+            <button
+              type="button"
+              class="social-button"
+              id="apple-login"
+            >
+              <span class="social-icon">●</span>
+              Apple
+            </button>
+
+          </div>
+
+          <div class="separator">
+            <span>O CONTINÚA CON</span>
+          </div>
+
+          <form id="login-form">
+
+            <div class="login-field">
+              <label for="login-email">
+                Correo electrónico
+              </label>
+
+              <input
+                type="email"
+                id="login-email"
+                required
+                autocomplete="email"
+                placeholder="correo@ejemplo.com"
+              />
+            </div>
+
+            <div class="login-field">
+
+              <div class="password-heading">
+                <label for="login-password">
+                  Contraseña
+                </label>
+
+                <a href="#" id="forgot-password">
+                  ¿Olvidaste tu contraseña?
+                </a>
+              </div>
+
+              <div class="password-input-wrap">
+
+                <input
+                  type="password"
+                  id="login-password"
+                  required
+                  autocomplete="current-password"
+                  placeholder="Escribe tu contraseña"
+                />
+
+                <button
+                  type="button"
+                  class="show-password"
+                  data-target="login-password"
+                  aria-label="Mostrar contraseña"
+                >
+                  Ver
+                </button>
+
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              class="login-submit"
+            >
+              Iniciar sesión
+            </button>
+
+          </form>
+
+          <p class="login-switch">
+            ¿No tienes una cuenta?
+
+            <a href="#" id="show-register">
+              Crear cuenta
+            </a>
+          </p>
+
+        </div>
+
+        <!-- REGISTRO -->
+        <div
+          id="register-view"
+          class="hidden-view"
+        >
+
+          <div class="mobile-brand brand">
+            Food<span>Go</span>
+          </div>
+
+          <h1>Crea tu cuenta</h1>
+
+          <p class="login-description">
+            Regístrate para empezar a pedir en minutos.
+          </p>
+
+          <div
+            class="form-msg"
+            id="register-msg"
+          ></div>
+
+          <form id="register-form">
+
+            <div class="login-field">
+              <label for="reg-nombre">
+                Nombre completo
+              </label>
+
+              <input
+                type="text"
+                id="reg-nombre"
+                required
+                autocomplete="name"
+                placeholder="Ana Pérez"
+              />
+            </div>
+
+            <div class="login-field">
+              <label for="reg-email">
+                Correo electrónico
+              </label>
+
+              <input
+                type="email"
+                id="reg-email"
+                required
+                autocomplete="email"
+                placeholder="correo@ejemplo.com"
+              />
+            </div>
+
+            <div class="login-field">
+              <label for="reg-password">
+                Contraseña
+              </label>
+
+              <div class="password-input-wrap">
+
+                <input
+                  type="password"
+                  id="reg-password"
+                  required
+                  minlength="6"
+                  autocomplete="new-password"
+                  placeholder="Mínimo 6 caracteres"
+                />
+
+                <button
+                  type="button"
+                  class="show-password"
+                  data-target="reg-password"
+                  aria-label="Mostrar contraseña"
+                >
+                  Ver
+                </button>
+
+              </div>
+            </div>
+
+            <div class="login-field">
+              <label for="reg-direccion">
+                Dirección de entrega
+              </label>
+
+              <input
+                type="text"
+                id="reg-direccion"
+                required
+                autocomplete="street-address"
+                placeholder="Calle, número y ciudad"
+              />
+            </div>
+
+            <button
+              type="submit"
+              class="login-submit"
+            >
+              Crear cuenta
+            </button>
+
+          </form>
+
+          <p class="login-switch">
+            ¿Ya tienes una cuenta?
+
+            <a href="#" id="show-login">
+              Iniciar sesión
+            </a>
+          </p>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- SECCIÓN INFERIOR: RESTAURANTE + LLUVIA DE DINERO -->
+<section class="hero-money" id="hero-money">
+
+  <div class="hero-table-bg"></div>
+  <div class="money-rain" id="money-rain-hero"></div>
+  <div class="hero-overlay"></div>
+
+  <div class="hero-content">
+    <h1 class="hero-title" id="hero-title">Tu restaurante, más cerca de todos.</h1>
+
+    <button class="hero-cta" id="hero-cta">
+      <span>Registrar mi negocio</span>
+      <span class="hero-arrow">→</span>
+    </button>
+  </div>
+
+</section>
+
+<!-- SECCIÓN: ¿ERES REPARTIDOR? -->
+<section class="hero-money hero-rider" id="hero-rider">
+
+  <div class="hero-table-bg" style="background-image:url('https://images.unsplash.com/photo-1601599963565-b7f49deb00c8?w=1600&q=80');"></div>
+  <div class="hero-overlay"></div>
+
+  <div class="hero-content">
+    <h1 class="hero-title" id="hero-rider-title">¿Eres repartidor? Gana a tu propio ritmo.</h1>
+
+    <button class="hero-cta" id="hero-rider-cta">
+      <span>Quiero repartir</span>
+      <span class="hero-arrow">→</span>
+    </button>
+  </div>
+
+</section>
+
+  <script src="js/api.js"></script>
+
+  <script>
+    // Redirigir cuando ya existe una sesión
+    if (getToken()) {
+      window.location.href = "restaurantes.html";
+    }
+
+    const loginView = document.getElementById("login-view");
+    const registerView = document.getElementById("register-view");
+
+    const showRegister = document.getElementById("show-register");
+    const showLogin = document.getElementById("show-login");
+
+    showRegister.addEventListener("click", (event) => {
+      event.preventDefault();
+
+      loginView.classList.add("hidden-view");
+      registerView.classList.remove("hidden-view");
+    });
+
+    showLogin.addEventListener("click", (event) => {
+      event.preventDefault();
+
+      registerView.classList.add("hidden-view");
+      loginView.classList.remove("hidden-view");
+    });
+
+    function mostrarMensaje(id, texto, tipo) {
+      const elemento = document.getElementById(id);
+
+      elemento.textContent = texto;
+      elemento.className = `form-msg ${tipo}`;
+    }
+
+    function limpiarMensaje(id) {
+      const elemento = document.getElementById(id);
+
+      elemento.textContent = "";
+      elemento.className = "form-msg";
+    }
+
+    // INICIAR SESIÓN
+    document
+      .getElementById("login-form")
+      .addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        limpiarMensaje("login-msg");
+
+        const email = document
+          .getElementById("login-email")
+          .value
+          .trim();
+
+        const password = document
+          .getElementById("login-password")
+          .value;
+
+        try {
+          const data = await apiFetch("/auth/login", {
+            method: "POST",
+            body: JSON.stringify({
+              email,
+              password,
+            }),
+          });
+
+          guardarSesion(data.token, data.usuario);
+
+          window.location.href = "restaurantes.html";
+        } catch (error) {
+          mostrarMensaje(
+            "login-msg",
+            error.message,
+            "error"
+          );
+        }
+      });
+
+    // REGISTRAR USUARIO
+    document
+      .getElementById("register-form")
+      .addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        limpiarMensaje("register-msg");
+
+        const nombre = document
+          .getElementById("reg-nombre")
+          .value
+          .trim();
+
+        const email = document
+          .getElementById("reg-email")
+          .value
+          .trim();
+
+        const password = document
+          .getElementById("reg-password")
+          .value;
+
+        const direccion = document
+          .getElementById("reg-direccion")
+          .value
+          .trim();
+
+        try {
+          const data = await apiFetch("/auth/registro", {
+            method: "POST",
+            body: JSON.stringify({
+              nombre,
+              email,
+              password,
+              direccion,
+            }),
+          });
+
+          guardarSesion(data.token, data.usuario);
+
+          window.location.href = "restaurantes.html";
+        } catch (error) {
+          mostrarMensaje(
+            "register-msg",
+            error.message,
+            "error"
+          );
+        }
+      });
+
+    // MOSTRAR Y OCULTAR CONTRASEÑA
+    document
+      .querySelectorAll(".show-password")
+      .forEach((button) => {
+        button.addEventListener("click", () => {
+          const inputId = button.dataset.target;
+          const input = document.getElementById(inputId);
+
+          const ocultar = input.type === "text";
+
+          input.type = ocultar ? "password" : "text";
+          button.textContent = ocultar ? "Ver" : "Ocultar";
+        });
+      });
+
+    // SLIDER DE IMÁGENES
+    const sliderImages = [
+      "img/login-1.jpg",
+      "img/login-2.jpg",
+      "img/login-3.jpg"
+    ];
+
+    const sliderImage = document.getElementById("slider-image");
+    const sliderDots = document.getElementById("slider-dots");
+
+    let currentImage = 0;
+    let sliderTimer;
+
+    function crearIndicadores() {
+      sliderDots.innerHTML = "";
+
+      sliderImages.forEach((_, index) => {
+        const button = document.createElement("button");
+
+        button.type = "button";
+        button.className = "slider-dot";
+        button.setAttribute(
+          "aria-label",
+          `Mostrar imagen ${index + 1}`
+        );
+
+        button.addEventListener("click", () => {
+          cambiarImagen(index);
+          reiniciarSlider();
+        });
+
+        sliderDots.appendChild(button);
+      });
+    }
+
+    function cambiarImagen(index) {
+      currentImage = index;
+
+      sliderImage.classList.add("changing");
+
+      setTimeout(() => {
+        sliderImage.src = sliderImages[currentImage];
+        sliderImage.classList.remove("changing");
+      }, 250);
+
+      actualizarIndicadores();
+    }
+
+    function actualizarIndicadores() {
+      const dots = document.querySelectorAll(".slider-dot");
+
+      dots.forEach((dot, index) => {
+        dot.classList.toggle(
+          "active",
+          index === currentImage
+        );
+      });
+    }
+
+    function siguienteImagen() {
+      const nextIndex =
+        currentImage === sliderImages.length - 1
+          ? 0
+          : currentImage + 1;
+
+      cambiarImagen(nextIndex);
+    }
+
+    function reiniciarSlider() {
+      clearInterval(sliderTimer);
+
+      sliderTimer = setInterval(
+        siguienteImagen,
+        5000
+      );
+    }
+
+    crearIndicadores();
+    actualizarIndicadores();
+    reiniciarSlider();
+
+
+      // Botón "Registrar mi negocio": lleva a la página de registro de negocios
+    document.getElementById("hero-cta").addEventListener("click", () => {
+      window.location.href = "negocio.html";
+    });
+
+    // Botón "Quiero repartir": lleva a la página de registro de repartidores
+    document.getElementById("hero-rider-cta").addEventListener("click", () => {
+      window.location.href = "repartidor.html";
+    });
+
+
+    // Botones todavía no conectados con Google o Apple
+    document
+      .getElementById("google-login")
+      .addEventListener("click", () => {
+        mostrarMensaje(
+          "login-msg",
+          "El acceso con Google todavía no está configurado.",
+          "info"
+        );
+      });
+
+    document
+      .getElementById("apple-login")
+      .addEventListener("click", () => {
+        mostrarMensaje(
+          "login-msg",
+          "El acceso con Apple todavía no está configurado.",
+          "info"
+        );
+      });
+
+    document
+      .getElementById("forgot-password")
+      .addEventListener("click", (event) => {
+        event.preventDefault();
+
+        mostrarMensaje(
+          "login-msg",
+          "La recuperación de contraseña todavía no está configurada.",
+          "info"
+        );
+      });
+
+
+      
+
+      
+  </script>
+
+</body>
+</html>

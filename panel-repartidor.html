@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FoodGo Repartidores — Panel</title>
+<link rel="stylesheet" href="css/styles.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container navbar-inner">
+    <a href="panel-repartidor.html" class="brand">Food<span>Go</span> <span style="font-size:14px; font-weight:400; color:var(--text-muted);">Repartidores</span></a>
+    <div class="nav-links">
+      <a href="#" class="tab-link active" data-tab="tab-disponibles">Pedidos disponibles</a>
+      <a href="#" class="tab-link" data-tab="tab-activo">Mi entrega</a>
+      <a href="#" class="tab-link" data-tab="tab-historial">Historial</a>
+    </div>
+    <div style="display:flex; align-items:center; gap:16px;">
+      <button id="toggle-disponible" class="toggle-online off">🔴 Desconectado</button>
+      <div id="nav-user"></div>
+    </div>
+  </div>
+</nav>
+
+<div class="container" style="padding-bottom:60px;">
+
+  <!-- ===================== TAB: PEDIDOS DISPONIBLES ===================== -->
+  <section id="tab-disponibles" class="panel-tab">
+    <div class="page-header">
+      <p class="eyebrow">En espera</p>
+      <h1>Pedidos disponibles</h1>
+      <p>Conéctate para empezar a ver solicitudes cerca de ti.</p>
+    </div>
+
+    <div id="aviso-desconectado" class="state-msg">
+      <div class="big">Estás desconectado</div>
+      Dale clic a "Desconectado" arriba a la derecha para empezar a ver pedidos disponibles.
+    </div>
+
+    <div id="disponibles-list" class="orders-list" style="display:none;"></div>
+  </section>
+
+  <!-- ===================== TAB: MI ENTREGA ACTIVA ===================== -->
+  <section id="tab-activo" class="panel-tab" style="display:none;">
+    <div class="page-header">
+      <p class="eyebrow">En curso</p>
+      <h1>Mi entrega</h1>
+      <p>El pedido que traes en este momento.</p>
+    </div>
+
+    <div id="activo-content"></div>
+  </section>
+
+  <!-- ===================== TAB: HISTORIAL ===================== -->
+  <section id="tab-historial" class="panel-tab" style="display:none;">
+    <div class="page-header">
+      <p class="eyebrow">Ya entregados</p>
+      <h1>Historial</h1>
+      <p>Tus últimas entregas completadas.</p>
+    </div>
+
+    <div id="historial-list" class="orders-list"></div>
+  </section>
+
+</div>
+
+<script src="js/api.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  let map, marker;
+  let miPerfil = null;
+
+  function exigirRepartidor() {
+    const usuario = getUser();
+    if (!getToken() || !usuario || usuario.rol !== "repartidor") {
+      window.location.href = "repartidor.html";
+      return false;
+    }
+    return true;
+  }
+
+  function renderNavUserRepartidor() {
+    const el = document.getElementById("nav-user");
+    const usuario = getUser();
+    el.innerHTML = `
+      <span style="color:var(--text-muted); font-size:14px; margin-right:4px;">Hola, ${usuario.nombre.split(" ")[0]}</span>
+      <button id="logout-btn" style="background:transparent; border:1px solid var(--border-strong); color:var(--text); padding:6px 12px; border-radius:6px; font-size:13px;">Salir</button>
+    `;
+    document.getElementById("logout-btn").addEventListener("click", () => {
+      cerrarSesion();
+      window.location.href = "repartidor.html";
+    });
+  }
+
+  // ---------- Navegación entre tabs ----------
+  document.querySelectorAll(".tab-link").forEach((link) => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      document.querySelectorAll(".tab-link").forEach((l) => l.classList.remove("active"));
+      link.classList.add("active");
+
+      document.querySelectorAll(".panel-tab").forEach((tab) => (tab.style.display = "none"));
+      document.getElementById(link.dataset.tab).style.display = "block";
+
+      if (link.dataset.tab === "tab-disponibles") cargarDisponibles();
+      if (link.dataset.tab === "tab-activo") cargarActivo();
+      if (link.dataset.tab === "tab-historial") cargarHistorial();
+    });
+  });
+
+  // ---------- Disponibilidad (en línea / desconectado) ----------
+  document.getElementById("toggle-disponible").addEventListener("click", async () => {
+    const boton = document.getElementById("toggle-disponible");
+    const enLinea = boton.classList.contains("on");
+
+    try {
+      const repartidor = await apiFetch("/repartidor/disponibilidad", {
+        method: "PATCH",
+        body: JSON.stringify({ disponible: !enLinea }),
+      });
+      actualizarBotonDisponibilidad(!!repartidor.disponible);
+      cargarDisponibles();
+    } catch (err) {
+      mostrarToast(err.message);
+    }
+  });
+
+  function actualizarBotonDisponibilidad(disponible) {
+    const boton = document.getElementById("toggle-disponible");
+    if (disponible) {
+      boton.textContent = "🟢 En línea";
+      boton.classList.add("on");
+      boton.classList.remove("off");
+    } else {
+      boton.textContent = "🔴 Desconectado";
+      boton.classList.add("off");
+      boton.classList.remove("on");
+    }
+  }
+
+  // ---------- Pedidos disponibles ----------
+  async function cargarDisponibles() {
+    const aviso = document.getElementById("aviso-desconectado");
+    const lista = document.getElementById("disponibles-list");
+    const enLinea = document.getElementById("toggle-disponible").classList.contains("on");
+
+    if (!enLinea) {
+      aviso.style.display = "block";
+      lista.style.display = "none";
+      return;
+    }
+
+    aviso.style.display = "none";
+    lista.style.display = "flex";
+    lista.innerHTML = `<div class="state-msg">Buscando pedidos cerca de ti...</div>`;
+
+    try {
+      const pedidos = await apiFetch("/repartidor/pedidos-disponibles");
+
+      if (pedidos.length === 0) {
+        lista.innerHTML = `<div class="state-msg">No hay pedidos disponibles en este momento. Espera un poco.</div>`;
+        return;
+      }
+
+      lista.innerHTML = pedidos
+        .map(
+          (p) => `
+        <div class="order-ticket">
+          <div class="order-ticket-top">
+            <div>
+              <h3>${p.restaurante.nombre}</h3>
+              <div class="date">Pedido ${p.codigo} · $${Number(p.total).toFixed(2)}</div>
+            </div>
+            <span class="status-pill status-pendiente">Nuevo</span>
+          </div>
+          <div class="order-items">${p.items.map((i) => `${i.cantidad}x ${i.nombre}`).join("<br>")}</div>
+          <div style="font-size:13px; color:var(--text-muted); margin-top:8px;">📍 Entregar en: ${p.direccionEntrega}</div>
+          <button class="btn-primary" style="margin-top:14px;" data-aceptar="${p.id}">Aceptar pedido</button>
+        </div>
+      `
+        )
+        .join("");
+
+      lista.querySelectorAll("[data-aceptar]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          try {
+            await apiFetch(`/repartidor/pedidos/${btn.dataset.aceptar}/aceptar`, { method: "PATCH" });
+            mostrarToast("¡Pedido aceptado! Ve a recogerlo.");
+            document.querySelector('.tab-link[data-tab="tab-activo"]').click();
+          } catch (err) {
+            mostrarToast(err.message);
+            cargarDisponibles();
+          }
+        });
+      });
+    } catch (err) {
+      lista.innerHTML = `<div class="state-msg">${err.message}</div>`;
+    }
+  }
+
+  // ---------- Mi entrega activa ----------
+  async function cargarActivo() {
+    const contenedor = document.getElementById("activo-content");
+    contenedor.innerHTML = `<div class="state-msg">Cargando...</div>`;
+
+    try {
+      const p = await apiFetch("/repartidor/mi-pedido-activo");
+
+      if (!p) {
+        contenedor.innerHTML = `<div class="state-msg"><div class="big">No tienes ninguna entrega activa</div>Ve a "Pedidos disponibles" para aceptar uno.</div>`;
+        return;
+      }
+
+      const enSucursal = p.estado === "aceptado";
+
+      contenedor.innerHTML = `
+        <div class="tracking-code">Código de pedido: ${p.codigo}</div>
+
+        <div class="courier-card" style="margin-bottom:20px;">
+          <div class="info">
+            <h4>${p.restaurante.nombre}</h4>
+            <p>${enSucursal ? "Ve a recoger el pedido en la sucursal" : "Llévalo a la dirección del cliente"}</p>
+          </div>
+        </div>
+
+        <div id="map" style="height:280px; margin-bottom:20px;"></div>
+
+        <div class="panel-card">
+          <h3 style="margin:0 0 14px; font-size:15px;">Platillos</h3>
+          <div class="order-items">${p.items.map((i) => `${i.cantidad}x ${i.nombre}`).join("<br>")}</div>
+          <div class="order-total" style="margin-top:10px;">Total: $${Number(p.total).toFixed(2)}</div>
+        </div>
+
+        <div class="panel-card">
+          <h3 style="margin:0 0 6px; font-size:15px;">📍 Entregar en</h3>
+          <p style="color:var(--text-muted); font-size:14px; margin:0;">${p.direccionEntrega}</p>
+        </div>
+
+        ${
+          enSucursal
+            ? `<button class="btn-primary" id="btn-recogido">Ya recogí el pedido, voy en camino</button>`
+            : `<button class="btn-primary" id="btn-entregado">Marcar como entregado</button>`
+        }
+      `;
+
+      dibujarMapaActivo(p, enSucursal);
+
+      if (enSucursal) {
+        document.getElementById("btn-recogido").addEventListener("click", async () => {
+          try {
+            await apiFetch(`/repartidor/pedidos/${p.id}/recogido`, { method: "PATCH" });
+            mostrarToast("¡Vas en camino al cliente!");
+            cargarActivo();
+          } catch (err) {
+            mostrarToast(err.message);
+          }
+        });
+      } else {
+        document.getElementById("btn-entregado").addEventListener("click", async () => {
+          if (!confirm("¿Confirmas que ya entregaste este pedido?")) return;
+          try {
+            await apiFetch(`/repartidor/pedidos/${p.id}/entregado`, { method: "PATCH" });
+            mostrarToast("¡Entrega completada! 🎉");
+            cargarActivo();
+          } catch (err) {
+            mostrarToast(err.message);
+          }
+        });
+      }
+    } catch (err) {
+      contenedor.innerHTML = `<div class="state-msg">${err.message}</div>`;
+    }
+  }
+
+  function dibujarMapaActivo(p, enSucursal) {
+    if (map) { map.remove(); map = null; }
+
+    const destino = enSucursal ? p.restauranteCoords : p.entregaCoords;
+    map = L.map("map").setView([destino.lat, destino.lng], 14);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors",
+    }).addTo(map);
+
+    const iconoTienda = L.divIcon({ html: "🏬", className: "", iconSize: [28, 28] });
+    const iconoCasa = L.divIcon({ html: "📍", className: "", iconSize: [28, 28] });
+
+    L.marker([p.restauranteCoords.lat, p.restauranteCoords.lng], { icon: iconoTienda }).addTo(map).bindPopup("Sucursal");
+    L.marker([p.entregaCoords.lat, p.entregaCoords.lng], { icon: iconoCasa }).addTo(map).bindPopup("Cliente");
+
+    L.polyline(
+      [
+        [p.restauranteCoords.lat, p.restauranteCoords.lng],
+        [p.entregaCoords.lat, p.entregaCoords.lng],
+      ],
+      { color: "#F2A93B", weight: 3, dashArray: "6 8" }
+    ).addTo(map);
+
+    map.fitBounds(
+      [
+        [p.restauranteCoords.lat, p.restauranteCoords.lng],
+        [p.entregaCoords.lat, p.entregaCoords.lng],
+      ],
+      { padding: [40, 40] }
+    );
+  }
+
+  // ---------- Historial ----------
+  async function cargarHistorial() {
+    const lista = document.getElementById("historial-list");
+    lista.innerHTML = `<div class="state-msg">Cargando...</div>`;
+
+    try {
+      const pedidos = await apiFetch("/repartidor/historial");
+
+      if (pedidos.length === 0) {
+        lista.innerHTML = `<div class="state-msg">Aún no has completado ninguna entrega.</div>`;
+        return;
+      }
+
+      lista.innerHTML = pedidos
+        .map((p) => {
+          const fecha = new Date(p.entregadoEn || p.createdAt).toLocaleString("es-ES", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+          return `
+          <div class="order-ticket">
+            <div class="order-ticket-top">
+              <div>
+                <h3>${p.restaurante.nombre}</h3>
+                <div class="date">${fecha} · ${p.codigo}</div>
+              </div>
+              <span class="status-pill status-entregado">Entregado</span>
+            </div>
+            <div class="order-items">${p.items.map((i) => `${i.cantidad}x ${i.nombre}`).join("<br>")}</div>
+          </div>
+        `;
+        })
+        .join("");
+    } catch (err) {
+      lista.innerHTML = `<div class="state-msg">${err.message}</div>`;
+    }
+  }
+
+  // ---------- Init ----------
+  async function init() {
+    if (!exigirRepartidor()) return;
+    renderNavUserRepartidor();
+
+    try {
+      miPerfil = await apiFetch("/repartidor/mi-perfil");
+      actualizarBotonDisponibilidad(!!miPerfil.disponible);
+    } catch (err) {
+      console.error(err);
+    }
+
+    cargarDisponibles();
+  }
+
+  init();
+</script>
+</body>
+</html>

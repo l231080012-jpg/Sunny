@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FoodGo Repartidores — Empieza a repartir</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body class="auth-page">
+
+  <main class="login-layout">
+
+    <!-- COLUMNA DE IMAGEN -->
+    <section class="login-slider" aria-label="FoodGo Repartidores">
+
+      <div class="table-bg" style="background-image:url('https://images.unsplash.com/photo-1526367790999-0150786686a2?w=1000&q=80');"></div>
+
+      <div class="slider-overlay"></div>
+
+      <div class="slider-content">
+        <div class="brand login-brand">
+          Food<span>Go</span> <span style="color:#fff; font-weight:400; font-size:16px;">Repartidores</span>
+        </div>
+
+        <div>
+          <p class="slider-tag">GANA REPARTIENDO A TU RITMO</p>
+          <h2>Tú decides cuándo conectarte y cuánto ganar.</h2>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- COLUMNA DEL FORMULARIO -->
+    <section class="login-panel">
+      <div class="login-panel-content">
+
+        <!-- INICIAR SESIÓN -->
+        <div id="login-view">
+
+          <div class="mobile-brand brand">Food<span>Go</span> Repartidores</div>
+
+          <h1>Hola de nuevo</h1>
+          <p class="login-description">Ingresa para empezar a recibir pedidos.</p>
+
+          <div class="form-msg" id="login-msg"></div>
+
+          <form id="login-form">
+            <div class="login-field">
+              <label for="login-email">Correo electrónico</label>
+              <input type="email" id="login-email" required autocomplete="email" placeholder="correo@ejemplo.com" />
+            </div>
+
+            <div class="login-field">
+              <label for="login-password">Contraseña</label>
+              <div class="password-input-wrap">
+                <input type="password" id="login-password" required autocomplete="current-password" placeholder="Escribe tu contraseña" />
+                <button type="button" class="show-password" data-target="login-password" aria-label="Mostrar contraseña">Ver</button>
+              </div>
+            </div>
+
+            <button type="submit" class="login-submit">Iniciar sesión</button>
+          </form>
+
+          <p class="login-switch">
+            ¿Aún no eres repartidor?
+            <a href="#" id="show-register">Regístrate aquí</a>
+          </p>
+
+          <div class="demo-hint" style="margin-top:24px;">
+            ¿Buscas pedir comida o vender en tu restaurante?
+            <a href="index.html" style="color:var(--mango); font-weight:700;">Clientes</a> ·
+            <a href="negocio.html" style="color:var(--mango); font-weight:700;">Negocios</a>
+          </div>
+        </div>
+
+        <!-- REGISTRO DE REPARTIDOR -->
+        <div id="register-view" class="hidden-view">
+
+          <div class="mobile-brand brand">Food<span>Go</span> Repartidores</div>
+
+          <h1>Regístrate como repartidor</h1>
+          <p class="login-description">Solo necesitamos algunos datos para verificarte.</p>
+
+          <div class="form-msg" id="register-msg"></div>
+
+          <form id="register-form">
+
+            <div class="login-field">
+              <label for="reg-nombre">Nombre completo</label>
+              <input type="text" id="reg-nombre" required autocomplete="name" placeholder="Como aparece en tu identificación" />
+            </div>
+
+            <div class="login-field">
+              <label for="reg-email">Correo electrónico</label>
+              <input type="email" id="reg-email" required autocomplete="email" placeholder="correo@ejemplo.com" />
+            </div>
+
+            <div class="login-field">
+              <label for="reg-password">Contraseña</label>
+              <div class="password-input-wrap">
+                <input type="password" id="reg-password" required minlength="6" autocomplete="new-password" placeholder="Mínimo 6 caracteres" />
+                <button type="button" class="show-password" data-target="reg-password" aria-label="Mostrar contraseña">Ver</button>
+              </div>
+            </div>
+
+            <div class="login-field">
+              <label for="reg-telefono">Teléfono</label>
+              <input type="tel" id="reg-telefono" required placeholder="+52 999 123 4567" />
+            </div>
+
+            <div class="card-row">
+              <div class="field">
+                <label>Año de nacimiento</label>
+                <input type="number" id="reg-anio" required min="1950" max="2010" placeholder="1998" />
+              </div>
+              <div class="field">
+                <label>CURP</label>
+                <input type="text" id="reg-curp" required maxlength="18" placeholder="VEAJ980101HYNLRL09" style="text-transform:uppercase;" />
+              </div>
+            </div>
+
+            <div class="login-field">
+              <label for="reg-empresa">Empresa socia con la que trabajas</label>
+              <select id="reg-empresa" required style="width:100%; height:50px; padding:0 16px; border:1px solid #3b3b3b; border-radius:12px; background:#090909; color:#fff; font-size:15px;">
+                <option value="">Selecciona una opción</option>
+                <option value="Independiente">Independiente</option>
+                <option value="Flota Norte Logística">Flota Norte Logística</option>
+                <option value="MotoExpress SA">MotoExpress SA</option>
+                <option value="Repartos Rápidos MX">Repartos Rápidos MX</option>
+              </select>
+            </div>
+
+            <div class="login-field">
+              <label for="reg-vehiculo-imagen">Foto de tu vehículo (URL)</label>
+              <input type="text" id="reg-vehiculo-imagen" placeholder="https://..." />
+            </div>
+
+            <label style="display:flex; align-items:flex-start; gap:10px; font-size:13px; color:#a9a9a9; margin-bottom:20px; line-height:1.5;">
+              <input type="checkbox" id="reg-politicas" required style="margin-top:3px; width:16px; height:16px;" />
+              Acepto las políticas de repartidores de FoodGo y confirmo que mis datos son verídicos.
+            </label>
+
+            <button type="submit" class="login-submit">Crear cuenta de repartidor</button>
+          </form>
+
+          <p class="login-switch">
+            ¿Ya tienes cuenta?
+            <a href="#" id="show-login">Inicia sesión</a>
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <script src="js/api.js"></script>
+  <script>
+    if (getToken()) window.location.href = "panel-repartidor.html";
+
+    const loginView = document.getElementById("login-view");
+    const registerView = document.getElementById("register-view");
+
+    document.getElementById("show-register").addEventListener("click", (e) => {
+      e.preventDefault();
+      loginView.classList.add("hidden-view");
+      registerView.classList.remove("hidden-view");
+    });
+
+    document.getElementById("show-login").addEventListener("click", (e) => {
+      e.preventDefault();
+      registerView.classList.add("hidden-view");
+      loginView.classList.remove("hidden-view");
+    });
+
+    function mostrarMensaje(id, texto, tipo) {
+      const el = document.getElementById(id);
+      el.textContent = texto;
+      el.className = `form-msg ${tipo}`;
+    }
+
+    document.getElementById("login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("login-email").value.trim();
+      const password = document.getElementById("login-password").value;
+
+      try {
+        const data = await apiFetch("/auth/login", {
+          method: "POST",
+          body: JSON.stringify({ email, password }),
+        });
+
+        if (data.usuario.rol !== "repartidor") {
+          mostrarMensaje("login-msg", "Esta cuenta no es de un repartidor. Usa el login correspondiente.", "error");
+          return;
+        }
+
+        guardarSesion(data.token, data.usuario);
+        window.location.href = "panel-repartidor.html";
+      } catch (err) {
+        mostrarMensaje("login-msg", err.message, "error");
+      }
+    });
+
+    document.getElementById("register-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const nombre = document.getElementById("reg-nombre").value.trim();
+      const email = document.getElementById("reg-email").value.trim();
+      const password = document.getElementById("reg-password").value;
+      const telefono = document.getElementById("reg-telefono").value.trim();
+      const anioNacimiento = Number(document.getElementById("reg-anio").value);
+      const curp = document.getElementById("reg-curp").value.trim().toUpperCase();
+      const empresaSocia = document.getElementById("reg-empresa").value;
+      const imagenVehiculo = document.getElementById("reg-vehiculo-imagen").value.trim();
+
+      if (curp.length !== 18) {
+        mostrarMensaje("register-msg", "La CURP debe tener 18 caracteres", "error");
+        return;
+      }
+      if (!empresaSocia) {
+        mostrarMensaje("register-msg", "Selecciona una empresa socia", "error");
+        return;
+      }
+
+      try {
+        const data = await apiFetch("/auth/registro-repartidor", {
+          method: "POST",
+          body: JSON.stringify({ nombre, email, password, telefono, anioNacimiento, curp, empresaSocia, imagenVehiculo }),
+        });
+
+        guardarSesion(data.token, data.usuario);
+        window.location.href = "panel-repartidor.html";
+      } catch (err) {
+        mostrarMensaje("register-msg", err.message, "error");
+      }
+    });
+
+    document.querySelectorAll(".show-password").forEach((button) => {
+      button.addEventListener("click", () => {
+        const input = document.getElementById(button.dataset.target);
+        const ocultar = input.type === "text";
+        input.type = ocultar ? "password" : "text";
+        button.textContent = ocultar ? "Ver" : "Ocultar";
+      });
+    });
+
+    document.getElementById("reg-curp").addEventListener("input", (e) => {
+      e.target.value = e.target.value.toUpperCase();
+    });
+  </script>
+
+</body>
+</html>

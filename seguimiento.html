@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FoodGo — Seguimiento de pedido</title>
+<link rel="stylesheet" href="css/styles.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container navbar-inner">
+    <a href="restaurantes.html" class="brand">Food<span>Go</span></a>
+    <div class="nav-links">
+      <a href="restaurantes.html">Restaurantes</a>
+      <a href="pedidos.html" class="active">Mis pedidos</a>
+    </div>
+    <div id="nav-user"></div>
+  </div>
+</nav>
+
+<div class="container" style="max-width:640px;">
+  <div class="page-header" style="padding-top:36px;">
+    <p class="eyebrow">Seguimiento en vivo</p>
+    <h1 id="restaurante-nombre">Cargando pedido...</h1>
+  </div>
+
+  <div id="content"></div>
+</div>
+
+<footer>FoodGo — Proyecto de práctica full stack</footer>
+
+<script src="js/api.js"></script>
+<script src="js/cart.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  // Duración total simulada del trayecto del repartidor (demo). En producción esto vendría
+  // de actualizaciones GPS reales enviadas por la app del repartidor (Fase 2).
+  const DEMO_DURACION_MS = 45000;
+
+  const params = new URLSearchParams(window.location.search);
+  const pedidoId = params.get("id");
+
+  const ESTADO_INFO = {
+    pendiente: { paso: 0, texto: "En espera de que el restaurante confirme tu producto" },
+    aceptado: { paso: 1, texto: "Un repartidor va en camino a recoger tu pedido" },
+    en_camino: { paso: 2, texto: "¡Ya fue recogido! Tu repartidor va hacia ti" },
+    entregado: { paso: 3, texto: "Pedido entregado. ¡Buen provecho!" },
+    devuelto: { paso: -1, texto: "Este pedido fue marcado como devolución" },
+    cancelado: { paso: -1, texto: "Este pedido fue cancelado" },
+  };
+
+  let map, courierMarker, timerInterval;
+
+  async function init() {
+    if (!exigirSesion()) return;
+    renderNavUser();
+
+    if (!pedidoId) { window.location.href = "pedidos.html"; return; }
+
+    try {
+      const pedido = await apiFetch(`/pedidos/${pedidoId}`);
+      render(pedido);
+
+      // Simulación automática: si el pedido sigue pendiente, lo avanzamos a "en camino" tras 6s
+      if (pedido.estado === "pendiente") {
+        setTimeout(() => avanzarPedido(pedidoId), 6000);
+      }
+    } catch (err) {
+      document.getElementById("content").innerHTML = `<div class="state-msg"><div class="big">No se pudo cargar el pedido</div>${err.message}</div>`;
+    }
+  }
+
+  async function avanzarPedido(id) {
+    try {
+      const actualizado = await apiFetch(`/pedidos/${id}/avanzar`, { method: "PATCH" });
+      render(actualizado);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  function render(p) {
+    document.getElementById("restaurante-nombre").textContent = p.restaurante?.nombre || "Tu pedido";
+
+    const info = ESTADO_INFO[p.estado];
+    const content = document.getElementById("content");
+
+    content.innerHTML = `
+      <div class="tracking-code">Código de pedido: ${p.codigo}</div>
+      ${renderStepper(p, info)}
+      ${p.estado === "en_camino" ? '<div class="eta-banner"><span class="msg">🛵 En camino a tu dirección</span><span class="eta-num" id="eta-num">--</span></div>' : ""}
+      ${p.estado === "aceptado" ? '<div class="eta-banner"><span class="msg">🏬 Tu repartidor va a la sucursal por tu pedido</span></div>' : ""}
+      ${p.estado === "pendiente" ? '<div class="eta-banner"><span class="msg">⏳ Confirmando tu pedido con el restaurante...</span></div>' : ""}
+      ${p.repartidor ? renderRepartidor(p.repartidor) : ""}
+      ${p.restauranteCoords && p.entregaCoords ? '<div id="map"></div>' : ""}
+      <div style="font-size:13px; color:var(--text-muted); margin-bottom: 20px;">Entregando en: ${p.direccionEntrega}</div>
+      ${p.estado !== "entregado" && p.estado !== "devuelto" && p.estado !== "cancelado" ? `<button class="btn-primary" style="background:transparent; border:1px solid var(--border-strong); color:var(--text-muted);" onclick="solicitarDevolucion('${p._id}')">Reportar un problema / solicitar devolución</button>` : ""}
+    `;
+
+    if (p.restauranteCoords && p.entregaCoords) {
+      dibujarMapa(p);
+    }
+
+    if (p.estado === "en_camino") {
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => actualizarProgreso(p), 1000);
+      actualizarProgreso(p);
+    }
+  }
+
+  function renderStepper(p, info) {
+    const pasos = [
+      { key: "pendiente", label: "En espera", icon: "⏳" },
+      { key: "aceptado", label: "Aceptado", icon: "🛵" },
+      { key: "en_camino", label: "En camino", icon: "📦" },
+      { key: "entregado", label: "Entregado", icon: "✅" },
+    ];
+
+    if (info.paso === -1) {
+      return `<div class="eta-banner"><span class="msg">${info.texto}</span></div>`;
+    }
+
+    return `<div class="stepper">
+      ${pasos
+        .map((paso, idx) => {
+          let clase = "";
+          if (idx < info.paso) clase = "done";
+          if (idx === info.paso) clase = "current";
+          return `<div class="step ${clase}">
+            <div class="dot">${idx < info.paso ? "✓" : paso.icon}</div>
+            <div class="label">${paso.label}</div>
+          </div>`;
+        })
+        .join("")}
+    </div>`;
+  }
+
+  function renderRepartidor(r) {
+    const telLimpio = r.telefono.replace(/\s/g, "");
+    return `<div class="courier-card">
+      <img src="${r.foto}" alt="${r.nombre}" />
+      <div class="info">
+        <h4>${r.nombre}</h4>
+        <p>${r.vehiculo} · Tu repartidor</p>
+      </div>
+      <div class="courier-actions">
+        <a href="tel:${telLimpio}" title="Llamar">📞</a>
+        <a href="sms:${telLimpio}" title="Enviar mensaje">💬</a>
+      </div>
+    </div>`;
+  }
+
+  function actualizarProgreso(p) {
+    const elapsed = Date.now() - new Date(p.envioIniciadoEn).getTime();
+    const progreso = Math.min(1, elapsed / DEMO_DURACION_MS);
+
+    const minutosRestantes = Math.max(0, Math.ceil(p.tiempoEstimadoMin * (1 - progreso)));
+    const etaEl = document.getElementById("eta-num");
+    if (etaEl) etaEl.textContent = minutosRestantes <= 1 ? "¡Está llegando!" : `${minutosRestantes} min`;
+
+    if (courierMarker) {
+      const lat = p.restauranteCoords.lat + (p.entregaCoords.lat - p.restauranteCoords.lat) * progreso;
+      const lng = p.restauranteCoords.lng + (p.entregaCoords.lng - p.restauranteCoords.lng) * progreso;
+      courierMarker.setLatLng([lat, lng]);
+    }
+
+    if (progreso >= 1) {
+      clearInterval(timerInterval);
+      avanzarPedido(p._id);
+    }
+  }
+
+  function dibujarMapa(p) {
+    const contenedor = document.getElementById("map");
+    if (!contenedor) return;
+
+    if (map) { map.remove(); map = null; }
+
+    map = L.map("map").setView([p.restauranteCoords.lat, p.restauranteCoords.lng], 14);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors",
+    }).addTo(map);
+
+    const iconoTienda = L.divIcon({ html: "🏬", className: "", iconSize: [28, 28] });
+    const iconoCasa = L.divIcon({ html: "📍", className: "", iconSize: [28, 28] });
+    const iconoMoto = L.divIcon({ html: "🛵", className: "", iconSize: [28, 28] });
+
+    L.marker([p.restauranteCoords.lat, p.restauranteCoords.lng], { icon: iconoTienda }).addTo(map).bindPopup("Restaurante");
+    L.marker([p.entregaCoords.lat, p.entregaCoords.lng], { icon: iconoCasa }).addTo(map).bindPopup("Tu dirección");
+
+    L.polyline(
+      [
+        [p.restauranteCoords.lat, p.restauranteCoords.lng],
+        [p.entregaCoords.lat, p.entregaCoords.lng],
+      ],
+      { color: "#F2A93B", weight: 3, dashArray: "6 8" }
+    ).addTo(map);
+
+    map.fitBounds([
+      [p.restauranteCoords.lat, p.restauranteCoords.lng],
+      [p.entregaCoords.lat, p.entregaCoords.lng],
+    ], { padding: [40, 40] });
+
+    if (p.estado === "en_camino") {
+      const elapsed = Date.now() - new Date(p.envioIniciadoEn).getTime();
+      const progreso = Math.min(1, elapsed / DEMO_DURACION_MS);
+      const lat = p.restauranteCoords.lat + (p.entregaCoords.lat - p.restauranteCoords.lat) * progreso;
+      const lng = p.restauranteCoords.lng + (p.entregaCoords.lng - p.restauranteCoords.lng) * progreso;
+      courierMarker = L.marker([lat, lng], { icon: iconoMoto }).addTo(map).bindPopup("Tu repartidor");
+    }
+  }
+
+  async function solicitarDevolucion(id) {
+    if (!confirm("¿Seguro que quieres solicitar la devolución de este pedido?")) return;
+    try {
+      const actualizado = await apiFetch(`/pedidos/${id}/solicitar-devolucion`, { method: "PATCH" });
+      clearInterval(timerInterval);
+      render(actualizado);
+      mostrarToast("Solicitud de devolución registrada");
+    } catch (err) {
+      mostrarToast(err.message);
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>

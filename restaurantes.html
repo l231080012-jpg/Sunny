@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FoodGo — Restaurantes</title>
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container navbar-inner">
+    <a href="restaurantes.html" class="brand">Food<span>Go</span></a>
+    <div class="nav-links">
+      <a href="restaurantes.html" class="active">Restaurantes</a>
+      <a href="pedidos.html">Mis pedidos</a>
+    </div>
+    <div style="display:flex; align-items:center; gap:16px;">
+      <div id="nav-user"></div>
+      <button class="nav-cart" onclick="abrirCartDrawer()">
+        🛒 <span id="cart-count">0</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <p class="eyebrow">Antojo del día</p>
+    <h1>¿Qué se te antoja hoy?</h1>
+    <p>Explora los restaurantes disponibles cerca de ti y arma tu pedido en segundos.</p>
+  </div>
+
+  <div class="meal-filter" id="meal-filter">
+    <button class="meal-chip active" data-meal="todos">🍽️ Todo</button>
+    <button class="meal-chip" data-meal="desayuno">🥞 Desayuno</button>
+    <button class="meal-chip" data-meal="almuerzo">🥗 Almuerzo</button>
+    <button class="meal-chip" data-meal="cena">🍕 Cena</button>
+  </div>
+
+  <div class="filters">
+    <input type="text" id="buscar" placeholder="Buscar restaurante..." />
+    <div class="chip-group" id="categorias"></div>
+  </div>
+
+  <div id="restaurant-grid" class="restaurant-grid">
+    <div class="state-msg">Cargando restaurantes...</div>
+  </div>
+</div>
+
+<footer>
+  FoodGo — Proyecto de práctica full stack (Node.js + Express + MySQL + HTML/CSS/JS) ·
+  <a href="negocio.html" style="color:var(--mango);">¿Tienes un restaurante?</a> ·
+  <a href="repartidor.html" style="color:var(--mango);">¿Quieres repartir con nosotros?</a>
+</footer>
+
+<script src="js/api.js"></script>
+<script src="js/cart.js"></script>
+
+<script src="js/direccion.js"></script>
+<script>
+  let todosLosRestaurantes = [];
+  let categoriaActiva = "Todas";
+  let horarioActivo = "todos";
+
+  async function init() {
+    if (!exigirSesion()) return;
+    renderNavUser();
+    inyectarCartDrawer();
+     inyectarBarraDireccion();
+
+    document.querySelectorAll(".meal-chip").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        document.querySelectorAll(".meal-chip").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        horarioActivo = btn.dataset.meal;
+        await cargarRestaurantes();
+      });
+    });
+
+    try {
+      await cargarRestaurantes();
+    } catch (err) {
+      document.getElementById("restaurant-grid").innerHTML = `
+        <div class="state-msg">
+          <div class="big">No se pudo conectar con el servidor</div>
+          Verifica que el backend esté corriendo en ${API_BASE}.<br>${err.message}
+        </div>`;
+    }
+  }
+
+  async function cargarRestaurantes() {
+    const query = horarioActivo !== "todos" ? `?horario=${horarioActivo}` : "";
+    todosLosRestaurantes = await apiFetch(`/restaurantes${query}`);
+    renderCategorias();
+    aplicarFiltros();
+  }
+
+  function renderCategorias() {
+    const categorias = ["Todas", ...new Set(todosLosRestaurantes.map((r) => r.categoria))];
+    const el = document.getElementById("categorias");
+    el.innerHTML = categorias
+      .map((c) => `<button class="chip ${c === categoriaActiva ? "active" : ""}" data-cat="${c}">${c}</button>`)
+      .join("");
+
+    el.querySelectorAll(".chip").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        categoriaActiva = btn.dataset.cat;
+        renderCategorias();
+        aplicarFiltros();
+      });
+    });
+  }
+
+  function aplicarFiltros() {
+    const texto = document.getElementById("buscar").value.toLowerCase();
+    const filtrados = todosLosRestaurantes.filter((r) => {
+      const coincideCategoria = categoriaActiva === "Todas" || r.categoria === categoriaActiva;
+      const coincideTexto = r.nombre.toLowerCase().includes(texto);
+      return coincideCategoria && coincideTexto;
+    });
+    renderGrid(filtrados);
+  }
+
+  function renderGrid(lista) {
+    const grid = document.getElementById("restaurant-grid");
+    if (lista.length === 0) {
+      grid.innerHTML = `<div class="state-msg"><div class="big">Sin resultados</div>Prueba con otra búsqueda o categoría.</div>`;
+      return;
+    }
+
+    grid.innerHTML = lista
+      .map(
+        (r) => `
+      <a href="restaurante.html?id=${r.id}" class="restaurant-card">
+        <div class="thumb" style="background-image:url('${r.imagen || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=500"}')">
+          <span class="badge-time">${r.tiempoEntregaMin} min</span>
+        </div>
+        <div class="info">
+          <h3>${r.nombre}</h3>
+          <p class="cat">${r.categoria}</p>
+          <div class="meta">
+            <span class="rating">★ ${r.calificacion.toFixed(1)}</span>
+            <span>Envío $${r.costoEnvio.toFixed(2)}</span>
+          </div>
+        </div>
+      </a>
+    `
+      )
+      .join("");
+  }
+
+  document.getElementById("buscar").addEventListener("input", aplicarFiltros);
+
+  init();
+</script>
+</body>
+</html>
